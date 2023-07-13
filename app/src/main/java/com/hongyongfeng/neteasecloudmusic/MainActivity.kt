@@ -1,24 +1,26 @@
 package com.hongyongfeng.neteasecloudmusic
 
-import android.app.ProgressDialog.show
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.MenuItem
-import android.view.ViewGroup
-import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
+import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding:ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+//        StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
+        StatusBarUtils.initStatusView(this)
         setContentView(binding.root)
+        initView(StatusBarUtils.getStatusBarHeight(this)+2)
         initListener()
         val nav:NavigationView=binding.navView
         nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *3/ 4;//屏幕的三分之一
@@ -60,10 +62,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun initView(dp:Int){
+        val lp = binding.actionBar.getLayoutParams() as LinearLayout.LayoutParams
+        lp.topMargin= dp
+        binding.actionBar.setLayoutParams(lp)
+    }
     private fun initListener() {
         binding.btnNva.setOnClickListener{
             binding.drawerLayout.openDrawer(GravityCompat.START)
             println("success")
+        }
+        binding.btnQrcode.setOnClickListener{
+            "扫描二维码".showToast(this)
         }
     }
 

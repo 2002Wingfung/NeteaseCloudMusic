@@ -75,6 +75,9 @@ class MainActivity : AppCompatActivity() {
         binding.btnQrcode.setOnClickListener{
             "扫描二维码".showToast(this)
         }
+        binding.searchBar.setOnClickListener{
+            "查找歌曲".showToast(this)
+        }
     }
 
 

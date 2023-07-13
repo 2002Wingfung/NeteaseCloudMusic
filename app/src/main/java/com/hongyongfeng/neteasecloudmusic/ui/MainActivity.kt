@@ -1,4 +1,4 @@
-package com.hongyongfeng.neteasecloudmusic
+package com.hongyongfeng.neteasecloudmusic.ui
 
 import android.os.Bundle
 import android.widget.LinearLayout
@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import com.google.android.material.navigation.NavigationView
+import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
@@ -39,20 +40,20 @@ class MainActivity : AppCompatActivity() {
                     //binding.drawerLayout.closeDrawer(GravityCompat.START);//关闭侧滑栏
 
                 }
-                R.id.item2-> {
+                R.id.item2 -> {
                     Toast.makeText(this, "设置", Toast.LENGTH_SHORT).show()
 
                 }
 
-                R.id.item3-> {
+                R.id.item3 -> {
                     Toast.makeText(this, "深色模式", Toast.LENGTH_SHORT).show()
 
                 }
-                R.id.item4->{
+                R.id.item4 ->{
                     Toast.makeText(this, "关于", Toast.LENGTH_SHORT).show();
 
                 }
-                R.id.item5-> {
+                R.id.item5 -> {
                     Toast.makeText(this, "退出登录", Toast.LENGTH_SHORT).show()
 
                 }

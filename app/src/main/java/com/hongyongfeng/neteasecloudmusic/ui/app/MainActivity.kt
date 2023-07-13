@@ -1,6 +1,9 @@
-package com.hongyongfeng.neteasecloudmusic.ui
+package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.os.Bundle
+import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,7 +24,13 @@ class MainActivity : AppCompatActivity() {
 //        StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
         StatusBarUtils.initStatusView(this)
         setContentView(binding.root)
-        initView(StatusBarUtils.getStatusBarHeight(this)+2)
+        initView(StatusBarUtils.getStatusBarHeight(this)+10)
+
+        val window: Window = getWindow()
+        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN )
+
         initListener()
         val nav:NavigationView=binding.navView
         nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *3/ 4;//屏幕的三分之一

@@ -7,7 +7,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    tools:context=".ui.app.MainActivity">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,6 +29,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="horizontal"
+                    android:layout_marginStart="5dp"
                     android:layout_gravity="center_vertical">
                     <Button
                         android:id="@+id/btn_nva"
@@ -36,7 +37,7 @@
                         android:layout_height="match_parent"
                         android:paddingStart="10dp"
                         android:layout_marginStart="10dp"
-                        android:layout_marginEnd="10dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_marginTop="2dp"
                         android:layout_marginBottom="3dp"
                         android:backgroundTint="@color/black"
@@ -67,6 +68,8 @@
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="6dp"
                     android:layout_weight="6"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="3dp"
                     android:background="@drawable/action_search_bg"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
@@ -82,7 +85,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_marginStart="6dp"
-                        android:layout_marginTop="3dp"
+                        android:layout_marginTop="1dp"
                         android:gravity="start"
                         android:layout_weight="1"
                         android:ellipsize="end"
@@ -106,20 +109,17 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
                         android:orientation="horizontal">
-                        <Button
+                        <ImageView
                             android:id="@+id/btn_qrcode"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:paddingStart="10dp"
-                            android:layout_marginEnd="10dp"
-                            android:layout_marginTop="2dp"
-                            android:layout_marginBottom="2dp"
-                            android:layout_marginStart="5dp"
-                            android:backgroundTint="@color/black"
-                            android:background="@drawable/ic_qrcode"
+
+                            android:padding="5dp"
+                            android:src="@drawable/ic_qrcode"
                             android:enabled="true"
-                            />
+                            app:tint="@color/black" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

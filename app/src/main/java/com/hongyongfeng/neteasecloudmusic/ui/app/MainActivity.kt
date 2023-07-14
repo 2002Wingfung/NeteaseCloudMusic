@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         initListener()
         val nav:NavigationView=binding.navView
-        nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *3/ 4;//屏幕的三分之一
+        nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *4/ 5;//屏幕的三分之一
 
         nav.setLayoutParams(nav.layoutParams);
         val headerLayout =nav.inflateHeaderView(R.layout.nav_header)

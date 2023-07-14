@@ -9,6 +9,12 @@ android {
     buildFeatures {//要自己加上这个闭包
         viewBinding true
     }
+    viewBinding{
+        enabled=true
+    }
+    dataBinding{
+        enabled=true
+    }
     defaultConfig {
         applicationId "com.hongyongfeng.neteasecloudmusic"
         minSdk 21

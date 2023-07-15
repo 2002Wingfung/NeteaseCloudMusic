@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_app"
+    app:startDestination="@id/mainFragment">
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment"
+        android:label="MainFragment" >
+        <action
+            android:id="@+id/action_mainFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_QrFragment"
+            app:destination="@id/QRFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_listFragment"
+            app:destination="@id/listFragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_recentlyFragment"
+            app:destination="@id/recentlyFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.login.LoginFragment"
+        android:label="LoginFragment" />
+    <fragment
+        android:id="@+id/QRFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.qr.QRFragment"
+        android:label="QRFragment" />
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.search.SearchFragment"
+        android:label="SearchFragment" />
+    <fragment
+        android:id="@+id/listFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.list.ListFragment"
+        android:label="ListFragment" />
+    <fragment
+        android:id="@+id/recentlyFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.recently.RecentlyFragment"
+        android:label="RecentlyFragment" />
+</navigation>

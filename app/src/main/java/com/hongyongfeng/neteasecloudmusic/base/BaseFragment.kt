@@ -36,8 +36,11 @@ abstract class BaseFragment<VB:ViewBinding,VM:ViewModel>(
     ): View? {
         val binding=inflate(inflater,container,false)
         initFragment(binding,viewModel,publicViewModel,savedInstanceState)
+        initListener()
         return binding.root
     }
+
+    abstract fun initListener()
 
     abstract fun initFragment(binding: VB,viewModel:VM?,publicViewModel: PublicViewModel?,savedInstanceState: Bundle?)
 

@@ -1,0 +1,136 @@
+package com.hongyongfeng.neteasecloudmusic.ui.view.search
+
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.StateListDrawable
+import android.os.Bundle
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModel
+import com.hongyongfeng.neteasecloudmusic.R
+import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
+import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
+import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
+import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
+import com.hongyongfeng.neteasecloudmusic.util.showToast
+import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
+
+class SearchFragment: BaseFragment<FragmentSearchBinding, ViewModel>(
+    FragmentSearchBinding::inflate,
+    null,
+    true
+){
+    private lateinit var flowLayout: FlowLayout
+//    private lateinit var flowLayout: FlowLayout
+    private lateinit var mActivity: FragmentActivity
+    private lateinit var binding:FragmentSearchBinding
+
+    override fun initFragment(
+        binding: FragmentSearchBinding,
+        viewModel: ViewModel?,
+        publicViewModel: PublicViewModel?,
+        savedInstanceState: Bundle?
+    ) {
+        flowLayout = binding.layoutFlow.findViewById(R.id.flowlayout)
+        this.binding=binding
+        flowLayout.setSpace(DisplayUtils.dp2px(15F), DisplayUtils.dp2px(15F))
+        flowLayout.setPadding(
+            DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F),
+            DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F)
+        )
+
+    }
+
+    override fun initListener() {
+        binding.btnSearch.setOnClickListener {
+            val text=binding.edtSearch.text.toString()
+            if (text!=null&&text!=""){
+                text.showToast(mActivity)
+            }else{
+                "还没有输入关键词喔!".showToast(mActivity)
+            }
+        }
+        binding.edtSearch.apply {
+            setOnEditorActionListener{
+                    v,actionId,event->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    val text=this.text?.toString()
+                    if (text!=null&&text!=""){
+                        text.showToast(mActivity)
+                    }else{
+                        "还没有输入关键词喔!".showToast(mActivity)
+                    }
+                }
+                false
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mActivity=requireActivity()
+
+        val lp = binding.actionBar.layoutParams as ConstraintLayout.LayoutParams
+        lp.topMargin= StatusBarUtils.getStatusBarHeight(mActivity as AppCompatActivity)+10
+        binding.actionBar.setLayoutParams(lp)
+        display(flowLayout,null)
+    }
+    private fun display(flowLayout: FlowLayout, heatedWordsListMap: List<Map<String, Any>>?) {
+//        for (heatedWordsMap in heatedWordsListMap) {
+        for (i in 0..10) {
+            //新建一个TextView控件
+            val tv = TextView(mActivity)
+            //将网络请求中返回的字段设置在TextView中
+            //tv.text = heatedWordsMap["name"] as String?
+            tv.text = "123"
+            //设置字体的大小
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            //设置字体居中
+            tv.gravity = Gravity.CENTER
+            //设置偏离左右边界的长度
+            val paddingY = DisplayUtils.dp2px(6f)
+            val paddingX = DisplayUtils.dp2px(6f)
+            tv.setPadding(paddingX, paddingY, paddingX, paddingY)
+            tv.isClickable = false
+            //设置TextView为矩形
+            val shape = GradientDrawable.RECTANGLE
+            //设置圆角
+            val radius = DisplayUtils.dp2px(14f)
+            //设置边界的宽度
+            val strokeWeight = DisplayUtils.dp2px(2f)
+            //设置边界的颜色
+            val stokeColor = resources.getColor(R.color.transparent)
+            //设置默认(没按下时)的TextView样式
+            val drawableDefault = GradientDrawable()
+            drawableDefault.shape = shape
+            drawableDefault.cornerRadius = radius.toFloat()
+            drawableDefault.setStroke(strokeWeight, stokeColor)
+            drawableDefault.setColor(ContextCompat.getColor(mActivity, R.color.white))
+            //设置按下时TextView的样式
+            val drawableChecked = GradientDrawable()
+            drawableChecked.shape = shape
+            drawableChecked.cornerRadius = radius.toFloat()
+            drawableChecked.setColor(ContextCompat.getColor(mActivity, R.color.shallow_gray))
+            //设置selector
+            val stateListDrawable = StateListDrawable()
+            stateListDrawable.addState(intArrayOf(android.R.attr.state_checked), drawableChecked)
+            stateListDrawable.addState(intArrayOf(android.R.attr.state_pressed), drawableChecked)
+            stateListDrawable.addState(intArrayOf(), drawableDefault)
+            tv.background = stateListDrawable
+            //设置点击事件
+            tv.setOnClickListener { v: View? ->
+                val key = tv.text.toString()
+//                edtKeyword.setText(key)
+//                listener.sendValue(key)
+                println(key)
+            }
+            flowLayout.addView(tv)
+        }
+    }
+}

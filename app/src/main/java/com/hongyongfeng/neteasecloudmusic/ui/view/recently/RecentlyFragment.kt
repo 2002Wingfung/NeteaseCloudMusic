@@ -1,18 +1,22 @@
-package com.hongyongfeng.neteasecloudmusic.ui.view.login
+package com.hongyongfeng.neteasecloudmusic.ui.view.recently
 
 import android.os.Bundle
 import androidx.lifecycle.ViewModel
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
+import com.hongyongfeng.neteasecloudmusic.databinding.FragmentListBinding
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentLoginBinding
+import com.hongyongfeng.neteasecloudmusic.databinding.FragmentQrBinding
+import com.hongyongfeng.neteasecloudmusic.databinding.FragmentRecentlyBinding
+import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 
-class LoginFragment :BaseFragment<FragmentLoginBinding,ViewModel>(
-    FragmentLoginBinding::inflate,
+class RecentlyFragment: BaseFragment<FragmentRecentlyBinding, ViewModel>(
+    FragmentRecentlyBinding::inflate,
     null,
     true
 ){
     override fun initFragment(
-        binding: FragmentLoginBinding,
+        binding: FragmentRecentlyBinding,
         viewModel: ViewModel?,
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?

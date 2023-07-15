@@ -21,11 +21,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-//        StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
-        StatusBarUtils.initStatusView(this)
+        StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
+        //StatusBarUtils.initStatusView(this)
+        //用了上面这行代码会使得底部导航栏变黑
         setContentView(binding.root)
         initView(StatusBarUtils.getStatusBarHeight(this)+10)
 
+        apply {
+
+        }
         val window: Window = getWindow()
         //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)

@@ -113,6 +113,9 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, ViewModel>(
                 "还没有输入关键词喔!".showToast(mActivity)
             }
         }
+        binding.btnBack.setOnClickListener {
+            activity!!.supportFragmentManager.popBackStack()
+        }
         edtSearch.apply {
             setOnEditorActionListener{
                     v,actionId,event->

@@ -7,28 +7,20 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
-import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import androidx.navigation.findNavController
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentHotBinding
-import com.hongyongfeng.neteasecloudmusic.databinding.FragmentQrBinding
-import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.Search
-import com.hongyongfeng.neteasecloudmusic.network.res.Hot
+import com.hongyongfeng.neteasecloudmusic.model.Hot
 import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
-import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.sql.DriverManager
 
 class HotFragment : BaseFragment<FragmentHotBinding, SearchViewModel>(
     FragmentHotBinding::inflate,

@@ -1,6 +1,6 @@
 package com.hongyongfeng.neteasecloudmusic.network.api
 
-import com.hongyongfeng.neteasecloudmusic.network.res.Hot
+import com.hongyongfeng.neteasecloudmusic.model.Hot
 import com.hongyongfeng.neteasecloudmusic.network.res.HotData
 import okhttp3.ResponseBody
 import retrofit2.Call

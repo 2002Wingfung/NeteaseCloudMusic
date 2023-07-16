@@ -60,12 +60,12 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         //adapterEstablish.notifyDataSetChanged()
         //adapterCollect.notifyDataSetChanged()
         SetRecyclerView.setRecyclerViewScroll(
-            activity,
+            mActivity,
             recyclerViewCollect,
             adapterCollect
         )
         SetRecyclerView.setRecyclerViewScroll(
-            activity,
+            mActivity,
             recyclerViewEstablish,
             adapterEstablish
         )

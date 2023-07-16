@@ -36,8 +36,11 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
     private var num=1
     override fun onResume() {
         super.onResume()
-        println(456)
-        binding.edtSearch.setText("")
+        //println(456)
+        if (binding.edtSearch.text.toString()!=""){
+            binding.edtSearch.setText("")
+        }
+        //
 
     }
     override fun initFragment(
@@ -88,9 +91,11 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
             num=0
 
         }
+        val bundle=Bundle()
+        bundle.putString("text",text)
         //println(controller.currentDestination?.id)
         try {
-            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment)
+            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment,bundle)
 
         }catch (e:Exception){
             e.printStackTrace()
@@ -175,7 +180,7 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
                         binding.imgClear.visibility = View.INVISIBLE
                         try {
                             mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
-
+                            //看看如何才能获取到第一次的NavController，这样才可能不会抛出异常
                         }catch (e:Exception){
                             e.printStackTrace()
                         }

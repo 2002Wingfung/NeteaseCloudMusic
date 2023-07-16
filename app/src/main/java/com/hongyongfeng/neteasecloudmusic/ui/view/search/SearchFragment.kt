@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
@@ -80,6 +82,7 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
     fun search(text:String){
         text.showToast(mActivity)
         edtSearch.setText(text)
+        mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment)
 
 //        val appService2=ServiceCreator.create1<AppService>()
 //        appService2.getAppData().enqueue(object : Callback<List<Hot>> {

@@ -21,7 +21,7 @@ abstract class BaseFragment<VB:ViewBinding,VM:ViewModel>(
             viewModelProvider[it]
         }
     }
-    private val publicViewModel:PublicViewModel? by lazy{
+    private val publicViewModel: PublicViewModel? by lazy{
         if (publicViewModelTag){
             ViewModelProvider(requireActivity())[PublicViewModel::class.java]
         }else{

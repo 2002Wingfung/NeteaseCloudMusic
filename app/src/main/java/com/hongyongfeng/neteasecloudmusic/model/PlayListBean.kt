@@ -14,5 +14,4 @@ class PlayListBean(private var title:String="",
     fun setAmount(amount:Int){
         this.amount=amount
     }
-
 }

@@ -21,7 +21,6 @@ import com.hongyongfeng.neteasecloudmusic.databinding.FragmentMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
-import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 
 class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
@@ -29,7 +28,7 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
     null,
     true
 ){
-    private lateinit var activity:FragmentActivity
+    private lateinit var mActivity:FragmentActivity
     private lateinit var binding:FragmentMainBinding
     private lateinit var recyclerViewCollect:RecyclerView
     private lateinit var recyclerViewEstablish:RecyclerView
@@ -105,7 +104,7 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?
     ) {
-        activity=requireActivity()
+        mActivity=requireActivity()
         this.binding=binding
         initView(binding, StatusBarUtils.getStatusBarHeight(activity as AppCompatActivity)+10)
         initListener(binding)

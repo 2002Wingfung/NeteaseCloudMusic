@@ -13,17 +13,6 @@ import com.hongyongfeng.neteasecloudmusic.ui.viewholder.PlayListViewHolder
 
 class PlayListAdapter(private val list:List<PlayListBean>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    interface OnItemClickListener {
-
-
-        /**
-         * 点击歌单监听
-         * @param view item的视图
-         * @param position item的索引
-         */
-        fun onListClicked(view: View?, position: Int)
-    }
-
     private lateinit var method:(view:View,position:Int)->Unit
     fun setOnItemClickListener(method:(view:View,position:Int)->Unit){
         this.method=method

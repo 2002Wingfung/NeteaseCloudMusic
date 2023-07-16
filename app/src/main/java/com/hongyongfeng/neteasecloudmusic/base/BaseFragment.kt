@@ -16,9 +16,12 @@ abstract class BaseFragment<VB:ViewBinding,VM:ViewModel>(
     private val publicViewModelTag:Boolean=false
 ) :Fragment(){
     private val viewModel by lazy {//一个页面一个ViewModel
-        val viewModelProvider=ViewModelProvider(this)
+        val viewModelProvider=ViewModelProvider(requireActivity())
+
         viewModelClass?.let{//有时候不是每个页面都有ViewModel，可能数据量很少的时候就不需要ViewModel了
             viewModelProvider[it]
+            //上面这行代码等价于：
+            //viewModelProvider.get(it)
         }
     }
     private val publicViewModel: PublicViewModel? by lazy{

@@ -55,7 +55,6 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         }
         if (listEstablish.size==0){
             listEstablish.add(PlayListBean("456",7))
-
         }
 
         //adapterEstablish.notifyDataSetChanged()

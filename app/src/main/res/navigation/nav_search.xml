@@ -15,5 +15,9 @@
     <fragment
         android:id="@+id/resultFragment"
         android:name="com.hongyongfeng.neteasecloudmusic.ui.view.search.ResultFragment"
-        android:label="ResultFragment" />
+        android:label="ResultFragment" >
+        <action
+            android:id="@+id/action_resultFragment_to_hotFragment"
+            app:destination="@id/hotFragment" />
+    </fragment>
 </navigation>

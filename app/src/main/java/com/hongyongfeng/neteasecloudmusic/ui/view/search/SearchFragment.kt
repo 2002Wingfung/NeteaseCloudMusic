@@ -1,52 +1,45 @@
 package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
-import android.util.Log
-import android.util.TypedValue
-import android.view.Gravity
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.findNavController
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
-import com.hongyongfeng.neteasecloudmusic.network.APIResponse
-import com.hongyongfeng.neteasecloudmusic.network.api.AppService
-import com.hongyongfeng.neteasecloudmusic.network.api.Search
-import com.hongyongfeng.neteasecloudmusic.network.res.Hot
-import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.sql.DriverManager.println
 
 class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
     FragmentSearchBinding::inflate,
     SearchViewModel::class.java,
     true
 ){
-//    private lateinit var flowLayout: FlowLayout
-//    private lateinit var flowLayout: FlowLayout
+
     private lateinit var mActivity: FragmentActivity
     private lateinit var binding:FragmentSearchBinding
     private lateinit var edtSearch:EditText
     private lateinit var publicViewModel: PublicViewModel
     private lateinit var viewModel: SearchViewModel
 
+    private var controller: NavController?=null
+    private var num=1
+    override fun onResume() {
+        super.onResume()
+        println(456)
+        binding.edtSearch.setText("")
+
+    }
     override fun initFragment(
         binding: FragmentSearchBinding,
         viewModel: SearchViewModel?,
@@ -67,22 +60,41 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
             this.publicViewModel=publicViewModel
         }
         edtSearch=binding.edtSearch
-        mActivity=requireActivity()
 
-        this.viewModel.editText.observe(mActivity, Observer {
-                editText->
-            edtSearch.setText(editText)
-            search(editText)
-        })
+        if (!this::mActivity.isInitialized){
+            println(123)
+            mActivity=requireActivity()
+            this.viewModel.editText.observe(mActivity, Observer {
+                    editText->
+                binding.edtSearch.setText(editText)
+                search(editText)
+            })
+        }
+
+
+
 
 
     }
 
 
     fun search(text:String){
-        text.showToast(mActivity)
-        edtSearch.setText(text)
-        mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment)
+        //text.showToast(mActivity)
+        binding.edtSearch.setText(text)
+        println(R.id.hotFragment)
+        if (num==0){
+        }else{
+            println(num)
+            num=0
+
+        }
+        //println(controller.currentDestination?.id)
+        try {
+            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment)
+
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
 
 //        val appService2=ServiceCreator.create1<AppService>()
 //        appService2.getAppData().enqueue(object : Callback<List<Hot>> {
@@ -132,8 +144,44 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
                 "还没有输入关键词喔!".showToast(mActivity)
             }
         }
+        binding.imgClear.setOnClickListener {
+            val edt=binding.edtSearch
+            if (edt.text.toString()!=""){
+                edt.setText("")
+            }
+        }
+
+
         binding.btnBack.setOnClickListener {
+            binding.edtSearch.setText("请输入关键词")
             activity!!.supportFragmentManager.popBackStack()
+//            view?.let { it1 -> Navigation.findNavController(it1).navigateUp() };
+        }
+        edtSearch.apply {
+            addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                    if (this@apply.text.toString().isNotEmpty()) {
+                        binding.imgClear.visibility = View.VISIBLE
+                    } else {
+                        binding.imgClear.visibility = View.INVISIBLE
+                    }
+                }
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: Editable) {
+                    if (this@apply.text.toString().isNotEmpty()) {
+                        binding.imgClear.visibility = View.VISIBLE
+                    } else {
+                        binding.imgClear.visibility = View.INVISIBLE
+                        try {
+                            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+
+                        }catch (e:Exception){
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            })
         }
         edtSearch.apply {
             setOnEditorActionListener{

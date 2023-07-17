@@ -8,33 +8,34 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentHotBinding
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
-import com.hongyongfeng.neteasecloudmusic.network.api.Search
+import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
 import com.hongyongfeng.neteasecloudmusic.model.Hot
 import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
-import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
+import com.hongyongfeng.neteasecloudmusic.viewmodel.HotViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class HotFragment : BaseFragment<FragmentHotBinding, SearchViewModel>(
+class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     FragmentHotBinding::inflate,
-    SearchViewModel::class.java,
+    HotViewModel::class.java,
     true
 ){
     private lateinit var flowLayout: FlowLayout
     private lateinit var binding: FragmentHotBinding
     private lateinit var mActivity: FragmentActivity
     private lateinit var publicViewModel: PublicViewModel
-    private lateinit var viewModel: SearchViewModel
+    private lateinit var viewModel: HotViewModel
     override fun initFragment(
         binding: FragmentHotBinding,
-        viewModel: SearchViewModel?,
+        viewModel: HotViewModel?,
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?
     ) {
@@ -65,11 +66,16 @@ class HotFragment : BaseFragment<FragmentHotBinding, SearchViewModel>(
     }
     private fun hotWordsRequest(){
         publicViewModel!!.apply {
-            getAPI(Search::class.java).getHotData().getResponse {
+            getAPI(HotInterface::class.java).getHotData().getResponse {
                     flow ->
                 flow.collect(){
                     when(it){
-                        is APIResponse.Error-> Log.e("TAG",it.errMsg)
+                        is APIResponse.Error-> {
+                            Log.e("TAGInternet",it.errMsg)
+                            withContext(Dispatchers.Main){
+                                Toast.makeText(mActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                         is APIResponse.Loading-> Log.e("TAG","loading")
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val list=it.response

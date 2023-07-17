@@ -13,7 +13,7 @@
             app:destination="@id/loginFragment" />
         <action
             android:id="@+id/action_mainFragment_to_QrFragment"
-            app:destination="@id/QRFragment" />
+            app:destination="@id/QrFragment" />
         <action
             android:id="@+id/action_mainFragment_to_searchFragment"
             app:destination="@id/searchFragment" />
@@ -29,8 +29,8 @@
         android:name="com.hongyongfeng.neteasecloudmusic.ui.view.login.LoginFragment"
         android:label="LoginFragment" />
     <fragment
-        android:id="@+id/QRFragment"
-        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.qr.QRFragment"
+        android:id="@+id/QrFragment"
+        android:name="com.hongyongfeng.neteasecloudmusic.ui.view.qr.QrFragment"
         android:label="QRFragment" />
     <fragment
         android:id="@+id/searchFragment"

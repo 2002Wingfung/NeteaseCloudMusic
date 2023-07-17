@@ -1,23 +1,27 @@
 package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
-import com.hongyongfeng.neteasecloudmusic.adapter.PlayListAdapter
 import com.hongyongfeng.neteasecloudmusic.adapter.SongsAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
-import com.hongyongfeng.neteasecloudmusic.databinding.FragmentQrBinding
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentResultBinding
-import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
 import com.hongyongfeng.neteasecloudmusic.model.Songs
+import com.hongyongfeng.neteasecloudmusic.network.APIResponse
+import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
+import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
+import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-class ResultFragment : BaseFragment<FragmentResultBinding, ViewModel>(
+class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     FragmentResultBinding::inflate,
-    null,
+    SearchViewModel::class.java,
     true
 ){
     private var listSongs= mutableListOf<Songs>()
@@ -25,31 +29,74 @@ class ResultFragment : BaseFragment<FragmentResultBinding, ViewModel>(
     private lateinit var recyclerView: RecyclerView
     private lateinit var binding:FragmentResultBinding
     private lateinit var mActivity: FragmentActivity
+    private lateinit var viewModel: SearchViewModel
 
     override fun initFragment(
         binding: FragmentResultBinding,
-        viewModel: ViewModel?,
+        viewModel: SearchViewModel?,
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?
     ) {
         this.binding=binding
-        println(arguments?.getString("text"))
+        if (viewModel != null) {
+            this.viewModel=viewModel
+        }
     }
 
     private fun initView(){
         recyclerView = binding.rvSongs
 
+    }
 
+    override fun onStart() {
+        super.onStart()
+
+        searchRequest(arguments?.getString("text")!!)
+    }
+
+    private fun searchRequest(string: String) {
+        viewModel!!.apply {
+            getAPI(SearchInterface::class.java).getSearchData(string).getResponse {
+                    flow ->
+                flow.collect(){
+                    when(it){
+                        is APIResponse.Error-> {
+                            Log.e("TAG",it.errMsg)
+                            withContext(Dispatchers.Main){
+                                Toast.makeText(mActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        is APIResponse.Loading-> Log.e("TAG","loading")
+                        is APIResponse.Success-> withContext(Dispatchers.Main){
+                            val songsList=it.response.result.songs
+                            //val songsName=it.response
+                            //println(String(songsName.bytes()))
+                            //println(songsName)
+
+                            listSongs.addAll(songsList)
+                            adapter.notifyItemChanged(0)
+//                            println(list.data)
+//                            println(list.code)
+                            //切换主线程
+                            //更新UI
+                            //Toast.makeText(requireContext(), "登录成功", Toast.LENGTH_SHORT).show()
+                            //findNavController().navigate(R.id.action_loginFragment_to_mainNavFragment)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
         if (listSongs.size==0){
-            listSongs.add(Songs(12,"123",null,null))
+//            listSongs.add(Songs(12,"123",null,null))
+//            listSongs.add(Songs(12,"abc",null,null))
         }
         initView()
-        SetRecyclerView.setRecyclerViewScroll(
+        SetRecyclerView.setRecyclerView(
             mActivity,
             recyclerView,
             adapter
@@ -57,7 +104,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, ViewModel>(
     }
     override fun initListener() {
         adapter.setOnItemClickListener { view, position ->
-            println(listSongs.get(position).getName())
+            println(listSongs.get(position).name)
         }
     }
 }

@@ -8,15 +8,17 @@ import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.adapter.PlayListAdapter
 import com.hongyongfeng.neteasecloudmusic.databinding.ItemListBinding
 import com.hongyongfeng.neteasecloudmusic.databinding.ItemSongsBinding
+import org.w3c.dom.Text
 
 class SongsListViewHolder (itemView: View, val  onClickListener:(view:View, position:Int)->Unit, val binding: ItemSongsBinding):
     RecyclerView.ViewHolder(itemView) {
     var name:TextView?=null
     var title:TextView?=null
+    var vip:TextView?=null
     init {
         name=itemView.findViewById(R.id.tv_name)
         title=itemView.findViewById(R.id.tv_title)
-
+        vip=itemView.findViewById(R.id.tv_vip)
         itemView.setOnClickListener { view: View ->
             val position = adapterPosition
             //确保position值有效

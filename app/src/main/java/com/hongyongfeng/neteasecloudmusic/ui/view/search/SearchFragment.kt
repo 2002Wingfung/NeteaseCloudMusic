@@ -1,10 +1,14 @@
 package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
+import android.app.Instrumentation
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -17,12 +21,13 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
+import com.hongyongfeng.neteasecloudmusic.viewmodel.HotViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
-import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
 
-class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
+
+class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
     FragmentSearchBinding::inflate,
-    SearchViewModel::class.java,
+    HotViewModel::class.java,
     true
 ){
 
@@ -30,32 +35,34 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
     private lateinit var binding:FragmentSearchBinding
     private lateinit var edtSearch:EditText
     private lateinit var publicViewModel: PublicViewModel
-    private lateinit var viewModel: SearchViewModel
+    private lateinit var viewModel: HotViewModel
 
     private var controller: NavController?=null
     private var num=1
     override fun onResume() {
         super.onResume()
         //println(456)
-        if (binding.edtSearch.text.toString()!=""){
-            binding.edtSearch.setText("")
+        val edt=binding.edtSearch
+        if (edt.text.toString()!=""){
+            edt.setText("")
         }
+        edt.isFocusable = true
+        edt.isFocusableInTouchMode = true
+        edt.requestFocus()
+        edt.findFocus()
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
         //
 
     }
     override fun initFragment(
         binding: FragmentSearchBinding,
-        viewModel: SearchViewModel?,
+        viewModel: HotViewModel?,
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?
     ) {
         this.binding=binding
-//        flowLayout = binding.layoutFlow.findViewById(R.id.flowlayout)
-//        flowLayout.setSpace(DisplayUtils.dp2px(15F), DisplayUtils.dp2px(15F))
-//        flowLayout.setPadding(
-//            DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F),
-//            DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F)
-//        )
+
         if (viewModel != null) {
             this.viewModel=viewModel
         }
@@ -65,12 +72,14 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
         edtSearch=binding.edtSearch
 
         if (!this::mActivity.isInitialized){
-            println(123)
             mActivity=requireActivity()
             this.viewModel.editText.observe(mActivity, Observer {
                     editText->
                 binding.edtSearch.setText(editText)
                 search(editText)
+                println(123456)
+
+                //退出SearchFragment之后，重新进入，他又会执行这个方法，应该是和重走生命周期有关
             })
         }
 
@@ -117,7 +126,7 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
 //            }
 //        })
 
-//        appService2.getResponseBody().enqueue(object : Callback<ResponseBody>{
+//        appService2.getResponseBody().enqueue(object : Callback<ResponseBody> {
 //            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
 //                try {
 //                    //把原始数据转为字符串
@@ -160,7 +169,9 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, SearchViewModel>(
         binding.btnBack.setOnClickListener {
             binding.edtSearch.setText("请输入关键词")
             activity!!.supportFragmentManager.popBackStack()
-//            view?.let { it1 -> Navigation.findNavController(it1).navigateUp() };
+
+            //mActivity.onBackPressed();
+
         }
         edtSearch.apply {
             addTextChangedListener(object : TextWatcher {

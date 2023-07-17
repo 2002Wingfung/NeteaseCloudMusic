@@ -2,16 +2,11 @@ package com.hongyongfeng.neteasecloudmusic.model
 
 
 class Songs (
-    private var id:Int, private var name:String,private var artists:List<Artists>?,private var album:Album?){
-    fun getName()=name
-    fun getId()=id
-
+    var id:Int, var name:String,private var artists:List<Artists>?,private var album:Album?,var fee:Int){
+    fun getArtists():List<Artists>?=artists
+    fun getAlbum():Album?=album
 }
 
-class Artists {
+class Artists (var id :Int,var name:String)
 
-}
-
-class Album {
-
-}
+class Album (var id:Int,var name:String)

@@ -19,6 +19,7 @@ import androidx.navigation.findNavController
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
+import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.HotViewModel
@@ -46,12 +47,12 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         if (edt.text.toString()!=""){
             edt.setText("")
         }
-//        edt.isFocusable = true
-//        edt.isFocusableInTouchMode = true
-//        edt.requestFocus()
-//        edt.findFocus()
-//        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-//        imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
+        edt.isFocusable = true
+        edt.isFocusableInTouchMode = true
+        edt.requestFocus()
+        edt.findFocus()
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
         //
 
     }
@@ -77,7 +78,7 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
                     editText->
                 binding.edtSearch.setText(editText)
                 search(editText)
-                println(123456)
+                //println(123456)
 
                 //退出SearchFragment之后，重新进入，他又会执行这个方法，应该是和重走生命周期有关
             })
@@ -92,7 +93,9 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
 
     fun search(text:String){
         //text.showToast(mActivity)
-        binding.edtSearch.setText(text)
+        if (edtSearch.text.toString()!=text){
+            edtSearch.setText(text)
+        }
         //println(R.id.hotFragment)
         if (num==0){
         }else{
@@ -104,7 +107,16 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         bundle.putString("text",text)
         //println(controller.currentDestination?.id)
         try {
-            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment,bundle)
+            childFragmentManager.fragments[0].apply{
+                childFragmentManager.fragments.forEach{
+                    //println(it)
+                    if (HotFragment::class.java.isAssignableFrom(it.javaClass)){
+                        if (it.isVisible){
+                            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment,bundle)
+                        }
+                    }
+                }
+            }
 
         }catch (e:Exception){
             e.printStackTrace()
@@ -168,11 +180,20 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
 
         binding.btnBack.setOnClickListener {
             //
-            //activity!!.supportFragmentManager.popBackStack()
-            binding.edtSearch.setText("")
+            //edtSearch.setText("")
+
+            activity!!.supportFragmentManager.popBackStack()
             //requireActivity().onBackPressed();
         }
         edtSearch.apply {
+            setOnFocusChangeListener {
+                view,hasFocus->
+                if (hasFocus){
+
+                }else{
+                    KeyboardUtils.hideKeyboardWithQuery(edtSearch)
+                }
+            }
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
                     if (this@apply.text.toString().isNotEmpty()) {
@@ -191,7 +212,35 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
 
                     }
                     try {
-                        mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                        childFragmentManager.fragments[0].apply{
+                            childFragmentManager.fragments.forEach{
+                                //println(it)
+                                if (ResultFragment::class.java.isAssignableFrom(it.javaClass)){
+                                    if (it.isVisible){
+                                        mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                                    }
+                                }
+                            }
+                        }
+
+                        //mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+
+
+                        //mActivity.findNavController(R.id.search_nav)
+//                        for (fragment in childFragmentManager.fragments){
+//                            if (fragment is HotFragment){
+//                                if (fragment.isResumed){
+//
+//                                }else{
+//                                    mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+//
+//                                }
+//                                break
+//                            }else{
+//                                println(fragment)
+//
+//                            }
+//                        }
                         //看看如何才能获取到第一次的NavController，这样才可能不会抛出异常
                     }catch (e:Exception){
                         e.printStackTrace()

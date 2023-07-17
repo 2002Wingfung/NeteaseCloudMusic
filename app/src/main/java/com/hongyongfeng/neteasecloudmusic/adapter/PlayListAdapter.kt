@@ -25,6 +25,9 @@ class PlayListAdapter(private val list:List<PlayListBean>) : RecyclerView.Adapte
         return PlayListViewHolder(view,method,binding)
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return position
+    }
     override fun getItemCount(): Int=list.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder , position: Int) {

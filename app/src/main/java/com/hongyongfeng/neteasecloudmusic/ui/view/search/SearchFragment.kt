@@ -46,12 +46,12 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         if (edt.text.toString()!=""){
             edt.setText("")
         }
-        edt.isFocusable = true
-        edt.isFocusableInTouchMode = true
-        edt.requestFocus()
-        edt.findFocus()
-        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
+//        edt.isFocusable = true
+//        edt.isFocusableInTouchMode = true
+//        edt.requestFocus()
+//        edt.findFocus()
+//        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+//        imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
         //
 
     }
@@ -93,7 +93,7 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
     fun search(text:String){
         //text.showToast(mActivity)
         binding.edtSearch.setText(text)
-        println(R.id.hotFragment)
+        //println(R.id.hotFragment)
         if (num==0){
         }else{
             println(num)
@@ -167,11 +167,10 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
 
 
         binding.btnBack.setOnClickListener {
-            binding.edtSearch.setText("请输入关键词")
-            activity!!.supportFragmentManager.popBackStack()
-
-            //mActivity.onBackPressed();
-
+            //
+            //activity!!.supportFragmentManager.popBackStack()
+            binding.edtSearch.setText("")
+            //requireActivity().onBackPressed();
         }
         edtSearch.apply {
             addTextChangedListener(object : TextWatcher {
@@ -189,12 +188,13 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
                         binding.imgClear.visibility = View.VISIBLE
                     } else {
                         binding.imgClear.visibility = View.INVISIBLE
-                        try {
-                            mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
-                            //看看如何才能获取到第一次的NavController，这样才可能不会抛出异常
-                        }catch (e:Exception){
-                            e.printStackTrace()
-                        }
+
+                    }
+                    try {
+                        mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                        //看看如何才能获取到第一次的NavController，这样才可能不会抛出异常
+                    }catch (e:Exception){
+                        e.printStackTrace()
                     }
                 }
             })

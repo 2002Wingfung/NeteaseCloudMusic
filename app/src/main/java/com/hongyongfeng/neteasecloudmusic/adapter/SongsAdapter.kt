@@ -30,6 +30,11 @@ class SongsAdapter(private val list:List<Songs>) : RecyclerView.Adapter<Recycler
 
     override fun getItemCount(): Int=list.size
 
+    override fun getItemViewType(position: Int): Int {
+        return position
+        // 给每个ItemView指定不同的类型，这样在RecyclerView看来，这些ItemView全是不同的，不能复用
+        //这样就避免了滑动时复用出现数据错乱
+    }
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder , position: Int) {
         holder as SongsListViewHolder
         val bean :Songs= list[position]

@@ -115,8 +115,6 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         //根据id获取RecycleView的实例
         recyclerViewCollect = binding.rvCollect
         recyclerViewEstablish = binding.rvEstablish
-
-
     }
     private fun initListener(binding:FragmentMainBinding) {
         adapterCollect.setOnItemClickListener {

@@ -200,8 +200,6 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
 
                 }
             }
-
-            //requireActivity().onBackPressed();
         }
         edtSearch.apply {
             setOnFocusChangeListener {

@@ -6,9 +6,15 @@ import android.os.Bundle
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
+import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
+import com.hongyongfeng.neteasecloudmusic.databinding.FragmentMainBinding
+import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
+import com.hongyongfeng.neteasecloudmusic.util.showToast
 
 
 class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
@@ -20,19 +26,40 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val bundle = getIntent().getExtras();
         binding.tvPlayer.text=bundle?.getString("name")
         binding.tvId.text=bundle?.getInt("id").toString()
-
         transparentNavBar(this)
+        initView(binding, StatusBarUtils.getStatusBarHeight(this as AppCompatActivity)+5)
 
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+        //binding.tvTitle.textContainerInset = UIEdgeInsets.init(top: 0, left:-lineFragmentPadding , bottom: 0, right: -lineFragmentPadding )
+        initListener()
     }
-    private fun fullTrans(activity: Activity) {
-        val window: Window = activity.window
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
-        window.getDecorView().setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        )
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.navigationBarColor = Color.TRANSPARENT
+    private fun initView(binding: ActivityPlayerBinding, dp:Int){
+        val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
+        lp.topMargin= dp
+        binding.layoutActionBar.layoutParams = lp
+        binding.tvTitle.findFocus()
+        binding.tvTitle.requestFocus()
+        binding.tvSinger.findFocus()
+        binding.tvSinger.requestFocus()
     }
+    private fun initListener() {
+        binding.icPlay.setOnClickListener {
+            "play".showToast(this)
+        }
+        binding.icNext.setOnClickListener {
+            "next".showToast(this)
+
+        }
+        binding.icBack.setOnClickListener {
+            "back".showToast(this)
+
+        }
+        binding.icMode.setOnClickListener {
+            "mode".showToast(this)
+
+        }
+        binding.icList.setOnClickListener {
+            "list".showToast(this)
+        }
+    }
+
 }

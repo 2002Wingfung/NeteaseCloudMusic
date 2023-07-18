@@ -1,5 +1,6 @@
 package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,6 +14,7 @@ import com.hongyongfeng.neteasecloudmusic.model.Songs
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
 import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
+import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
@@ -104,7 +106,15 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     }
     override fun initListener() {
         adapter.setOnItemClickListener { view, position ->
-            println(listSongs.get(position).name)
+            val songs=listSongs[position]
+            println(songs.name)
+            val intent=Intent(mActivity, PlayerActivity::class.java)
+            val bundle=Bundle()
+            bundle.putString("name",songs.name)
+            bundle.putInt("id",songs.id)
+            intent.putExtras(bundle)
+            startActivity(intent)
+
         }
     }
 }

@@ -11,6 +11,10 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println(this)
+        val bundle = getIntent().getExtras();
+        binding.tvPlayer.text=bundle?.getString("name")
+        binding.tvId.text=bundle?.getInt("id").toString()
+
+
     }
 }

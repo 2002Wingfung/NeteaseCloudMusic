@@ -28,7 +28,7 @@ abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         binding = inflate(layoutInflater)
 
-        Log.d("TAG", binding.toString())
+        //Log.d("TAG", binding.toString())
         StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
         //StatusBarUtils.initStatusView(this)
         //用了上面这行代码会使得底部导航栏变黑

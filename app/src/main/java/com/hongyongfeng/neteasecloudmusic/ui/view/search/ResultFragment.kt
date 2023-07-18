@@ -105,11 +105,23 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     override fun initListener() {
         adapter.setOnItemClickListener { view, position ->
             val songs=listSongs[position]
-            println(songs.name)
+            //println(songs.name)
             val intent=Intent(mActivity, PlayerActivity::class.java)
             val bundle=Bundle()
             bundle.putString("name",songs.name)
             bundle.putInt("id",songs.id)
+            val artistList=songs.getArtists()
+            val artists=java.lang.StringBuilder()
+            for (artist in artistList!!){
+                if (artist == artistList[artistList.size-1]){
+                    artists.append(artist.name)
+                }else{
+                    artists.append(artist.name).append("/")
+                }
+            }
+            val albumId=songs.getAlbum()!!.id
+            bundle.putInt("albumId",albumId)
+            bundle.putString("singer",artists.toString())
             intent.putExtras(bundle)
             startActivity(intent)
 

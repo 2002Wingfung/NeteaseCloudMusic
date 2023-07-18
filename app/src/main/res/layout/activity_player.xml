@@ -39,6 +39,7 @@
                 android:layout_width="45dp"
                 android:layout_height="45dp"
                 android:layout_gravity="center"
+                android:id="@+id/btn_back"
                 android:background="@drawable/ic_action_bar_back"/>
         </LinearLayout>
         <LinearLayout
@@ -91,12 +92,11 @@
                 android:background="@drawable/ic_share"/>
         </LinearLayout>
     </LinearLayout>
-    <TextView
+    <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tv_player"
-        android:text="唱片cd"
-        android:textSize="19sp"
+        android:id="@+id/img_album"
+        android:src="@drawable/ic_cloud_music"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -108,7 +108,7 @@
         android:id="@+id/tv_id"
         android:text="播放器"
         android:textSize="19sp"
-        app:layout_constraintTop_toBottomOf= "@id/tv_player"
+        app:layout_constraintTop_toBottomOf= "@id/img_album"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

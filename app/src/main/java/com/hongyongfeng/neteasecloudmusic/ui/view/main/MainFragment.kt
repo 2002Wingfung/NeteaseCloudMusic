@@ -109,9 +109,9 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         initListener(binding)
     }
     private fun initView(binding: FragmentMainBinding,dp:Int){
-        val lp = binding.actionBar.getLayoutParams() as LinearLayout.LayoutParams
+        val lp = binding.actionBar.layoutParams as LinearLayout.LayoutParams
         lp.topMargin= dp
-        binding.actionBar.setLayoutParams(lp)
+        binding.actionBar.layoutParams = lp
         //根据id获取RecycleView的实例
         recyclerViewCollect = binding.rvCollect
         recyclerViewEstablish = binding.rvEstablish

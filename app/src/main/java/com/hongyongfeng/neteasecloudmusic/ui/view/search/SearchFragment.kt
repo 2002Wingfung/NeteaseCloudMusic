@@ -178,13 +178,14 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
             val edt=binding.edtSearch
             if (edt.text.toString()!=""){
                 edt.setText("")
+                activity!!.supportFragmentManager.popBackStack()
             }
         }
 
 
         binding.btnBack.setOnClickListener {
             //
-            //edtSearch.setText("")
+            edtSearch.setText("")
             activity!!.supportFragmentManager.popBackStack()
 
             childFragmentManager.fragments[0].apply{
@@ -224,27 +225,23 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
                 override fun afterTextChanged(s: Editable) {
                     if (this@apply.text.toString().isNotEmpty()) {
                         binding.imgClear.visibility = View.VISIBLE
-                    } else {
-                        binding.imgClear.visibility = View.INVISIBLE
-
-                    }
-                    try {
-                        childFragmentManager.fragments[0].apply{
-                            childFragmentManager.fragments.forEach{
-                                //println(it)
-                                if (ResultFragment::class.java.isAssignableFrom(it.javaClass)){
-                                    if (it.isVisible){
-                                        //mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
-                                        mActivity.findNavController(R.id.search_nav).navigate(R.id.hotFragment,null,NavOptions.Builder().setPopUpTo(R.id.resultFragment,true).build())
+                        try {
+                            childFragmentManager.fragments[0].apply{
+                                childFragmentManager.fragments.forEach{
+                                    //println(it)
+                                    if (ResultFragment::class.java.isAssignableFrom(it.javaClass)){
+                                        if (it.isVisible){
+                                            //mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                                            mActivity.findNavController(R.id.search_nav).navigate(R.id.hotFragment,null,NavOptions.Builder().setPopUpTo(R.id.resultFragment,true).build())
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        //mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                            //mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
 
 
-                        //mActivity.findNavController(R.id.search_nav)
+                            //mActivity.findNavController(R.id.search_nav)
 //                        for (fragment in childFragmentManager.fragments){
 //                            if (fragment is HotFragment){
 //                                if (fragment.isResumed){
@@ -259,10 +256,16 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
 //
 //                            }
 //                        }
-                        //看看如何才能获取到第一次的NavController，这样才可能不会抛出异常
-                    }catch (e:Exception){
-                        e.printStackTrace()
+                            //看看如何才能获取到第一次的NavController，这样才可能不会抛出异常
+                        }catch (e:Exception){
+                            e.printStackTrace()
+                        }
+                    } else {
+                        binding.imgClear.visibility = View.INVISIBLE
+
                     }
+
+
                 }
             })
         }

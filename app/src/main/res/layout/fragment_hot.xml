@@ -24,7 +24,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:paddingStart="10dp">
 
-        <com.hongyongfeng.neteasecloudmusic.ui.view.search.FlowLayout
+        <com.hongyongfeng.neteasecloudmusic.ui.widget.FlowLayout
             android:id="@+id/flowlayout"
             android:layout_width="wrap_content"
 

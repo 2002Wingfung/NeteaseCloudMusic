@@ -1,4 +1,4 @@
-package com.hongyongfeng.neteasecloudmusic.ui.view.search;
+package com.hongyongfeng.neteasecloudmusic.ui.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

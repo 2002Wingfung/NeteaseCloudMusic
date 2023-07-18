@@ -1,16 +1,12 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.os.Bundle
-import android.view.MotionEvent
-import android.view.View
-import android.view.Window
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
-import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
-import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
-import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
+import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
+import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
 
 
 class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate) {
@@ -24,6 +20,42 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //        }
 //        return super.dispatchTouchEvent(ev)
 //    }
+    private var mBackPressed: Long = 0
+
+    override fun onBackPressed() {
+        supportFragmentManager.fragments[0].apply {
+            if (this.childFragmentManager.fragments[0] is MainFragment){
+                if (mBackPressed + 500 > System.currentTimeMillis()) {
+                    super.onBackPressed()
+                    finish()
+                } else {
+                    Toast.makeText(this@MainActivity, "再点击一次返回键退出程序", Toast.LENGTH_SHORT).show()
+                    mBackPressed = System.currentTimeMillis()
+                }
+            }else{
+                super.onBackPressed()
+                childFragmentManager.fragments[0].apply{
+                    if(this.childFragmentManager.fragments.isNotEmpty()){
+                        this.childFragmentManager.fragments[0].apply {
+                            for (fragment in this.childFragmentManager.fragments){
+                                println(fragment)
+                                if (fragment is HotFragment) {
+                                    try {
+                                        activity!!.supportFragmentManager.popBackStack()
+                                    }catch (e:Exception){
+                                        println(e)
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)

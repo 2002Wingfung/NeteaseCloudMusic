@@ -52,8 +52,9 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
 
     override fun onStart() {
         super.onStart()
-
-        searchRequest(arguments?.getString("text")!!)
+        if (listSongs.isEmpty()){
+            searchRequest(arguments?.getString("text")!!)
+        }
     }
 
     private fun searchRequest(string: String) {
@@ -93,10 +94,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
-        if (listSongs.size==0){
-//            listSongs.add(Songs(12,"123",null,null))
-//            listSongs.add(Songs(12,"abc",null,null))
-        }
+
         initView()
         SetRecyclerView.setRecyclerView(
             mActivity,

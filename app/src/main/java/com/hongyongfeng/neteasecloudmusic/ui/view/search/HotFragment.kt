@@ -17,6 +17,7 @@ import com.hongyongfeng.neteasecloudmusic.databinding.FragmentHotBinding
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
 import com.hongyongfeng.neteasecloudmusic.model.Hot
+import com.hongyongfeng.neteasecloudmusic.ui.widget.FlowLayout
 import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.HotViewModel

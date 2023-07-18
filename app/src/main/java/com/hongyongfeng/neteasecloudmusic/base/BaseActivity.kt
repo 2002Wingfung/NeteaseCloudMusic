@@ -1,6 +1,9 @@
 package com.hongyongfeng.neteasecloudmusic.base
+
+import android.app.Activity
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
@@ -8,6 +11,7 @@ import androidx.viewbinding.ViewBinding
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
+
 
 abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
     private val inflate:(inflater:LayoutInflater)->VB,
@@ -39,5 +43,37 @@ abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
         //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.getDecorView()
             .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+    }
+    private fun fullTrans(activity: Activity) {
+        val window: Window = activity.window
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+        window.getDecorView().setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        )
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.navigationBarColor = Color.TRANSPARENT
+    }
+    open fun transparentNavBar(activity: Activity) {
+        transparentNavBar(activity.window)
+    }
+
+    open fun transparentNavBar(window: Window) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.navigationBarColor = Color.TRANSPARENT
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (window.attributes.flags and WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION === 0) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+            }
+        }
+        val decorView = window.decorView
+        val vis = decorView.systemUiVisibility
+        val option =
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        decorView.systemUiVisibility = vis or option
     }
 }

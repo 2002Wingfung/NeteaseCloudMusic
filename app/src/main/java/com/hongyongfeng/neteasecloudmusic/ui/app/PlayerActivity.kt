@@ -7,6 +7,7 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModel
@@ -17,7 +18,7 @@ import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 
 
-class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
+public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     ActivityPlayerBinding::inflate
 ){
 
@@ -36,10 +37,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
         lp.topMargin= dp
         binding.layoutActionBar.layoutParams = lp
-        binding.tvTitle.findFocus()
-        binding.tvTitle.requestFocus()
-        binding.tvSinger.findFocus()
-        binding.tvSinger.requestFocus()
+
     }
     private fun initListener() {
         binding.icPlay.setOnClickListener {

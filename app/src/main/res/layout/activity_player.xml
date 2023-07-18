@@ -48,24 +48,26 @@
             android:layout_height="wrap_content"
             android:layout_weight="3"
             >
-            <TextView
+            <com.hongyongfeng.neteasecloudmusic.ui.widget.MarqueeTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:id="@+id/tv_title"
-                android:text="歌名12312321321321321312321312312312"
+                android:text="歌名"
                 android:ellipsize="marquee"
                 android:includeFontPadding="false"
                 android:focusableInTouchMode="true"
                 android:focusable="true"
+                android:marqueeRepeatLimit="marquee_forever"
                 android:textSize="18sp"
                 android:textColor="@color/white"
                 android:singleLine="true" />
-            <TextView
+            <com.hongyongfeng.neteasecloudmusic.ui.widget.MarqueeTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/tv_singer"
-                android:text="歌手ssdfdsfdsffdsfdsfdsfdssdffs123d"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:text="歌手"
                 android:focusableInTouchMode="true"
                 android:focusable="true"
                 android:ellipsize="marquee"

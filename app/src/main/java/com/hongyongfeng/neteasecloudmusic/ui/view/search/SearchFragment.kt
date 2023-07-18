@@ -15,10 +15,12 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentSearchBinding
+import com.hongyongfeng.neteasecloudmusic.model.Hot
 import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
@@ -55,7 +57,9 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
         //
 
+
     }
+
     override fun initFragment(
         binding: FragmentSearchBinding,
         viewModel: HotViewModel?,
@@ -83,11 +87,6 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
                 //退出SearchFragment之后，重新进入，他又会执行这个方法，应该是和重走生命周期有关
             })
         }
-
-
-
-
-
     }
 
 
@@ -109,9 +108,10 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         try {
             childFragmentManager.fragments[0].apply{
                 childFragmentManager.fragments.forEach{
-                    //println(it)
-                    if (HotFragment::class.java.isAssignableFrom(it.javaClass)){
+                    println(it)
+                    if (it is HotFragment){
                         if (it.isVisible){
+                            //mActivity.findNavController(R.id.search_nav).navigate(R.id.resultFragment,bundle,NavOptions.Builder().setPopUpTo(R.id.hotFragment,true).build())
                             mActivity.findNavController(R.id.search_nav).navigate(R.id.action_hotFragment_to_resultFragment,bundle)
                         }
                     }
@@ -181,8 +181,21 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         binding.btnBack.setOnClickListener {
             //
             //edtSearch.setText("")
-
             activity!!.supportFragmentManager.popBackStack()
+
+            childFragmentManager.fragments[0].apply{
+                for (fragment in childFragmentManager.fragments){
+                    if (fragment is HotFragment) {
+                        try {
+                            activity!!.supportFragmentManager.popBackStack()
+                        }catch (e:Exception){
+                            println(e)
+                        }
+                    }
+
+                }
+            }
+
             //requireActivity().onBackPressed();
         }
         edtSearch.apply {
@@ -217,7 +230,8 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
                                 //println(it)
                                 if (ResultFragment::class.java.isAssignableFrom(it.javaClass)){
                                     if (it.isVisible){
-                                        mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                                        //mActivity.findNavController(R.id.search_nav).navigate(R.id.action_resultFragment_to_hotFragment)
+                                        mActivity.findNavController(R.id.search_nav).navigate(R.id.hotFragment,null,NavOptions.Builder().setPopUpTo(R.id.resultFragment,true).build())
                                     }
                                 }
                             }

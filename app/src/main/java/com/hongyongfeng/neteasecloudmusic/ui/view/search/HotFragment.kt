@@ -33,6 +33,7 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     private lateinit var mActivity: FragmentActivity
     private lateinit var publicViewModel: PublicViewModel
     private lateinit var viewModel: HotViewModel
+    private var hotList = mutableListOf<Hot>()
     override fun initFragment(
         binding: FragmentHotBinding,
         viewModel: HotViewModel?,
@@ -61,7 +62,11 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
-        hotWordsRequest()
+        if (hotList.isEmpty()){
+            hotWordsRequest()
+        }else{
+            display(flowLayout, hotList)
+        }
 
     }
     private fun hotWordsRequest(){
@@ -79,6 +84,7 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
                         is APIResponse.Loading-> Log.e("TAG","loading")
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val list=it.response
+                            hotList.addAll(list.data)
 //                            for (bean in list.hot){
 //                                println(bean.searchWord)
 //                            }

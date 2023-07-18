@@ -18,6 +18,8 @@
         android:label="ResultFragment" >
         <action
             android:id="@+id/action_resultFragment_to_hotFragment"
-            app:destination="@id/hotFragment" />
+            app:destination="@id/hotFragment"
+            app:popUpTo="@id/hotFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
 </navigation>

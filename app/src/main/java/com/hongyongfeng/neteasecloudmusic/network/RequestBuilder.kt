@@ -47,7 +47,11 @@ class RequestBuilder {
                 }
             }catch (e:Exception){
                 //println(e.toString())
-                emit(APIResponse.Error(e.message.toString()))
+                try {
+                    emit(APIResponse.Error(e.message.toString()))
+                }catch (e:Exception){
+                    println(e.toString())
+                }
             }
 
         }

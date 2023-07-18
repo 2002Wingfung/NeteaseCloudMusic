@@ -5,40 +5,32 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModel
 import com.hongyongfeng.neteasecloudmusic.R
+import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding:ActivityMainBinding
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_DOWN) {
-            //获取当前获得焦点的View
-            val view = currentFocus
-            //调用方法判断是否需要隐藏键盘
-            KeyboardUtils.hideKeyboard(ev, view, this)
-        }
-        return super.dispatchTouchEvent(ev)
-    }
+class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate) {
+    //private lateinit var binding:ActivityMainBinding
+//    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+//        if (ev.action == MotionEvent.ACTION_DOWN) {
+//            //获取当前获得焦点的View
+//            val view = currentFocus
+//            //调用方法判断是否需要隐藏键盘
+//            KeyboardUtils.hideKeyboard(ev, view, this)
+//        }
+//        return super.dispatchTouchEvent(ev)
+//    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
-        //StatusBarUtils.initStatusView(this)
-        //用了上面这行代码会使得底部导航栏变黑
-        setContentView(binding.root)
-        //initView(StatusBarUtils.getStatusBarHeight(this)+10)
+        //StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
+//        setContentView(binding.root)
+//        val window: Window = getWindow()
+//        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN )
 
-        apply {
-
-        }
-        val window: Window = getWindow()
-        //window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN )
 
         //initListener()
 //        val nav:NavigationView=binding.navView

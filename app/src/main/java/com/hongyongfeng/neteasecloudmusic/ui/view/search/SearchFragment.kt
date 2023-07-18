@@ -51,10 +51,14 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         }
         edt.isFocusable = true
         edt.isFocusableInTouchMode = true
+//        edt.requestFocus()
+//        edt.findFocus()
+        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        //imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
+
+        imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
         edt.requestFocus()
         edt.findFocus()
-        val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
         //
 
 

@@ -77,11 +77,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val needle=binding.imgNeedle
         mAnimatorNeedlePause= ObjectAnimator.ofFloat(needle, "rotation", 0f, -30f)
         mAnimatorNeedleStart= ObjectAnimator.ofFloat(needle, "rotation", -30f, 0f)
-        needle.pivotX=needle.width/1f+32
-        needle.pivotY=needle.height*1f+49
-        mAnimatorNeedlePause.duration = 1000
+        needle.pivotX=needle.width/1f+62
+        needle.pivotY=needle.height*1f+135
+        mAnimatorNeedlePause.duration = 700
         mAnimatorNeedlePause.interpolator = LinearInterpolator()
-        mAnimatorNeedleStart.duration = 1000
+        mAnimatorNeedleStart.duration = 700
         mAnimatorNeedleStart.interpolator = LinearInterpolator()
     // Object target:目标对象，
     // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
@@ -168,14 +168,14 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         binding.icPlay.setOnClickListener {
             if (count%2==0){
 
-                handler.sendEmptyMessageDelayed(0, 500)
+                handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()
 
                 mAnimatorNeedlePause.start()
                 "暂停".showToast(this)
 
             }else{
-                handler.sendEmptyMessageDelayed(1, 500)
+                handler.sendEmptyMessageDelayed(1, 700)
                 mAnimatorNeedlePause.pause()
                 mAnimatorNeedleStart.start()
 

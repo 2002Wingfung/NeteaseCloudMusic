@@ -32,6 +32,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     private var albumId: Int=0
     private lateinit var mAnimator: ObjectAnimator
+    private lateinit var mAnimatorNeedlePause: ObjectAnimator
+    private lateinit var mAnimatorNeedleStart: ObjectAnimator
 
 //    private var handler=Handler(Looper.getMainLooper()){
 //
@@ -72,6 +74,15 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
     // float... values:一系列这个属性将会到达的值
         mAnimator= ObjectAnimator.ofFloat(binding.imgAlbum, "rotation", 0f, 720f)
+        val needle=binding.imgNeedle
+        mAnimatorNeedlePause= ObjectAnimator.ofFloat(needle, "rotation", 0f, -30f)
+        mAnimatorNeedleStart= ObjectAnimator.ofFloat(needle, "rotation", -30f, 0f)
+        needle.pivotX=needle.width/1f+32
+        needle.pivotY=needle.height*1f+49
+        mAnimatorNeedlePause.duration = 1000
+        mAnimatorNeedlePause.interpolator = LinearInterpolator()
+        mAnimatorNeedleStart.duration = 1000
+        mAnimatorNeedleStart.interpolator = LinearInterpolator()
     // Object target:目标对象，
     // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
     // float... values:一系列这个属性将会到达的值
@@ -85,7 +96,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     // 设置重复的次数，无限
         mAnimator.repeatCount = ObjectAnimator.INFINITE
         mAnimator.start()
-        mAnimator.setupStartValues()
+
         //当音频文件加载好之后就start
 
     // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
@@ -158,11 +169,15 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             if (count%2==0){
 
                 handler.sendEmptyMessageDelayed(0, 500)
+                mAnimatorNeedleStart.pause()
 
+                mAnimatorNeedlePause.start()
                 "暂停".showToast(this)
 
             }else{
                 handler.sendEmptyMessageDelayed(1, 500)
+                mAnimatorNeedlePause.pause()
+                mAnimatorNeedleStart.start()
 
                 "播放".showToast(this)
             }

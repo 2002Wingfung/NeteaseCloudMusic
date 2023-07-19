@@ -2,6 +2,7 @@ package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -12,10 +13,10 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentResultBinding
 import com.hongyongfeng.neteasecloudmusic.model.Songs
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
-import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
 import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
+import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     SearchViewModel::class.java,
     true
 ){
+    private var page=1
     private var listSongs= mutableListOf<Songs>()
     private var adapter= SongsAdapter(listSongs)
     private lateinit var recyclerView: RecyclerView
@@ -40,31 +42,33 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         savedInstanceState: Bundle?
     ) {
         this.binding=binding
+        recyclerView = binding.rvSongs
         if (viewModel != null) {
             this.viewModel=viewModel
         }
     }
 
     private fun initView(){
-        recyclerView = binding.rvSongs
+
 
     }
 
     override fun onStart() {
         super.onStart()
         if (listSongs.isEmpty()){
-            searchRequest(arguments?.getString("text")!!)
+            searchRequest(arguments?.getString("text")!!,0)
         }
     }
 
-    private fun searchRequest(string: String) {
+    private fun searchRequest(string: String,page:Int) {
         viewModel!!.apply {
-            getAPI(SearchInterface::class.java).getSearchData(string).getResponse {
+            getAPI(SearchInterface::class.java).getSearchData(string,30,(page)*30).getResponse {
                     flow ->
                 flow.collect(){
                     when(it){
                         is APIResponse.Error-> {
                             Log.e("TAG",it.errMsg)
+                            adapter.notifyItemChanged(listSongs.size-1)
                             withContext(Dispatchers.Main){
                                 Toast.makeText(mActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
                             }
@@ -77,7 +81,9 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                             //println(songsName)
 
                             listSongs.addAll(songsList)
-                            adapter.notifyItemChanged(0)
+                            adapter.notifyItemChanged(listSongs.size)
+
+                            //println(listSongs.get(0))
 //                            println(list.data)
 //                            println(list.code)
                             //切换主线程
@@ -103,6 +109,29 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         )
     }
     override fun initListener() {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+            }
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
+                    if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
+                        //一下代码全都需要改变
+                        //"滑动到底部".showToast(mActivity)
+                        //listSongs.add(listSongs.get(1))
+
+                        searchRequest(arguments?.getString("text")!!,page)
+                        page++
+//                        Handler().post {
+//                            adapter.notifyItemChanged(listSongs.size - 1)
+//                        }
+
+                    }
+                }
+            }
+        })
         adapter.setOnItemClickListener { view, position ->
             val songs=listSongs[position]
             //println(songs.name)
@@ -128,3 +157,4 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         }
     }
 }
+

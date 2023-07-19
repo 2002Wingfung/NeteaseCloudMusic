@@ -9,7 +9,7 @@ import retrofit2.http.Query
 
 interface SearchInterface {
     @GET("search")
-    fun getSearchData(@Query("keywords")keywords:String): retrofit2.Call<SongsData>
+    fun getSearchData(@Query("keywords")keywords:String,@Query("limit") limit:Int,@Query("offset") offset:Int): retrofit2.Call<SongsData>
     @GET("search")
-    fun getResponseBody(@Query("keywords")keywords:String): retrofit2.Call<ResponseBody>
+    fun getResponseBody(@Query("keywords")keywords:String,@Query("limit") limit:Int,@Query("offset") offset:Int): retrofit2.Call<ResponseBody>
 }

@@ -1,16 +1,17 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.animation.ObjectAnimator
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.media.MediaPlayer
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.os.*
 import android.util.Log
 import android.view.animation.LinearInterpolator
+import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -19,13 +20,14 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
+import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
-import com.hongyongfeng.player.utli.Player
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.*
 
 
 public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
@@ -38,11 +40,17 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
+    private lateinit var mediaPlayer:MediaPlayer
+    private lateinit var seekBar: SeekBar
+    private var mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val myService: MusicService = (service as MusicService.MediaPlayerBinder).getMusicService()
+            mediaPlayer = myService.getMediaPlayer()
+        }
 
-    private val mediaPlayer=MediaPlayer()
-//    private var handler=Handler(Looper.getMainLooper()){
-//
-//    }
+        override fun onServiceDisconnected(name: ComponentName) {}
+    }
+
     private var handler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
@@ -95,7 +103,6 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     // 设置插值器，用来控制变化率
         mAnimator.interpolator = LinearInterpolator()
     // 设置重复的次数，无限
-    // 设置重复的次数，无限
         mAnimator.repeatCount = ObjectAnimator.INFINITE
         mAnimator.start()
 
@@ -108,6 +115,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
         lp.topMargin= dp
         binding.layoutActionBar.layoutParams = lp
+        seekBar=binding.seekBar
     }
     private fun songsRequest(songId:Int){
         //请求音频文件的代码
@@ -127,7 +135,15 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val url=it.response.data[0].url
                             //println("Song:$url")
-                            Player.initMediaPlayer(url, mediaPlayer)
+//                            Player.initMediaPlayer(url, mediaPlayer,seekBar)
+                            val intent = Intent(this@PlayerActivity, MusicService::class.java)
+                            intent.putExtra("url",url)
+
+                            Log.e("serviceMusic","Start")
+                            bindService(
+                                intent, mServiceConnection,
+                                BIND_AUTO_CREATE
+                            )
                         }
                     }
                 }
@@ -169,7 +185,6 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }
         binding.icPlay.setOnClickListener {
             if (count%2==0){
-
                 handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()
 
@@ -187,30 +202,57 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 if (!mediaPlayer.isPlaying){
                     mediaPlayer.start()//开始播放
                 }
-
                 //"播放".showToast(this)
             }
             count++
-
         }
         binding.icNext.setOnClickListener {
             "next".showToast(this)
-
         }
         binding.icBack.setOnClickListener {
             "back".showToast(this)
-
         }
         binding.icMode.setOnClickListener {
             "mode".showToast(this)
-
         }
         binding.icList.setOnClickListener {
             "list".showToast(this)
         }
+        seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                //MusicService.isChanging=true;
+
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                MusicService.isChanging=true;
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                //当拖动停止后，控制mediaPlayer播放指定位置的音乐
+                mediaPlayer.seekTo(seekBar!!.progress)
+                MusicService.isChanging=false;
+
+            }
+
+        })
+    }
+    private fun refresh(seekBar: SeekBar, mediaPlayer:MediaPlayer){
+        Timer().schedule(object : TimerTask(){
+            override fun run() {
+                if (!MusicService.isChanging){
+                    //当用户正在拖动进度进度条时不处理进度条的的进度
+                    seekBar.progress = mediaPlayer.currentPosition
+                }
+            }
+
+        },0,10)
     }
     override fun onDestroy() {
         super.onDestroy()
+        val intent = Intent(this, MusicService::class.java)
+        stopService(intent)
 //        mediaPlayer.stop()
 //        mediaPlayer.release()
     }

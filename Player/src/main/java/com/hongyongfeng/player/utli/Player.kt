@@ -1,7 +1,14 @@
 package com.hongyongfeng.player.utli
 
+import android.app.Activity
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.media.MediaPlayer
+import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 
 
 class Player {
@@ -13,12 +20,14 @@ class Player {
             mediaPlayer.setDataSource(url) //设置播放来源
 
             mediaPlayer.prepareAsync() //异步准备
+            //seekBar.max=mediaPlayer.duration
+            //发送广播
 
             mediaPlayer.setOnPreparedListener { mediaPlayer2 ->
 
                 //异步准备监听
-                println("Voice异步文件准备完成")
-                println("Voice异步文件时长"+ (mediaPlayer.duration / 1000).toString())
+                Log.d("myPlayer","Voice异步文件准备完成")
+                Log.d("myPlayer","Voice异步文件时长"+ (mediaPlayer.duration / 1000).toString())
                 mediaPlayer2.start() //播放
             }
             mediaPlayer.setScreenOnWhilePlaying(true) // 设置播放的时候一直让屏幕变亮
@@ -29,7 +38,10 @@ class Player {
                 //println("Voice进度: $i%")
                 println("Voice文件长度"+ (mediaPlayer1.duration / 1000).toString())
             }
+            mediaPlayer.setOnCompletionListener {
+                Log.d("MediaPlayer","播放已完成,准备播放下一首")
+                it.reset()
+            }
         }
     }
-
 }

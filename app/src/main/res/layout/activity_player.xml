@@ -219,7 +219,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.8016416" />
+        app:layout_constraintGuide_percent="0.79" />
 <!--    这个view这条线刚好是进度条的位置-->
     <View
         android:layout_width="match_parent"
@@ -227,6 +227,12 @@
         app:layout_constraintTop_toTopOf="@id/guideline"
         android:alpha="0.2"
         android:background="@android:color/black"/>
+    <SeekBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/seek_bar"
+        app:layout_constraintTop_toTopOf="@id/guideline"/>
+
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_2"

@@ -1,6 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
@@ -33,12 +34,13 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     mBackPressed = System.currentTimeMillis()
                 }
             }else{
-                super.onBackPressed()
+
                 childFragmentManager.fragments[0].apply{
                     if(this.childFragmentManager.fragments.isNotEmpty()){
                         this.childFragmentManager.fragments[0].apply {
                             for (fragment in this.childFragmentManager.fragments){
-                                println(fragment)
+                                //println(fragment)
+                                //Log.d("fragmentback",fragment.toString())
                                 if (fragment is HotFragment) {
                                     try {
                                         activity!!.supportFragmentManager.popBackStack()
@@ -52,6 +54,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     }
 
                 }
+                super.onBackPressed()
             }
         }
 

@@ -1,6 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.animation.ObjectAnimator
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,9 +10,11 @@ import android.util.Log
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
@@ -19,6 +22,7 @@ import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
+import com.hongyongfeng.player.utli.Player
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,6 +39,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
 
+    private val mediaPlayer=MediaPlayer()
 //    private var handler=Handler(Looper.getMainLooper()){
 //
 //    }
@@ -52,19 +57,16 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         super.onCreate(savedInstanceState)
         val bundle = intent.extras;
         binding.tvTitle.text=bundle?.getString("name")
+        val albumIdResult=bundle?.getInt("albumId")
+        if (albumIdResult!=null){
+            albumId=albumIdResult
+            picRequest(albumId)
+        }
         val songId=bundle?.getInt("id")
         if (songId!=null){
             songsRequest(songId)
         }
-        binding.tvId.text=songId.toString()
         binding.tvSinger.text=bundle?.getString("singer")
-
-        val albumIdResult=bundle?.getInt("albumId")
-        if (albumIdResult!=null){
-            albumId=albumIdResult
-            println(albumId)
-            picRequest(albumId)
-        }
 
         transparentNavBar(this)
         initView(binding, StatusBarUtils.getStatusBarHeight(this as AppCompatActivity)+5)
@@ -124,8 +126,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         is APIResponse.Loading-> Log.e("TAG","loading")
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val url=it.response.data[0].url
-                            println("Song:$url")
-
+                            //println("Song:$url")
+                            Player.initMediaPlayer(url, mediaPlayer)
                         }
                     }
                 }
@@ -150,7 +152,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         is APIResponse.Loading-> Log.e("TAG","loading")
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val url=it.response.songs[0].al.picUrl
-                            println("picUrl:$url")
+                            //println("picUrl:$url")
 
                             Picasso.get().load(url)
                                 .into(binding.imgAlbum)
@@ -172,14 +174,21 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 mAnimatorNeedleStart.pause()
 
                 mAnimatorNeedlePause.start()
-                "暂停".showToast(this)
-
+                //"暂停".showToast(this)
+                it.background=  getDrawable(R.drawable.ic_play_circle_2)
+                if (mediaPlayer.isPlaying){
+                    mediaPlayer.pause()//暂停播放
+                }
             }else{
                 handler.sendEmptyMessageDelayed(1, 700)
                 mAnimatorNeedlePause.pause()
                 mAnimatorNeedleStart.start()
+                it.background=  getDrawable(R.drawable.ic_pause)
+                if (!mediaPlayer.isPlaying){
+                    mediaPlayer.start()//开始播放
+                }
 
-                "播放".showToast(this)
+                //"播放".showToast(this)
             }
             count++
 
@@ -200,5 +209,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             "list".showToast(this)
         }
     }
-
+    override fun onDestroy() {
+        super.onDestroy()
+//        mediaPlayer.stop()
+//        mediaPlayer.release()
+    }
 }

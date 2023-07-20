@@ -1,11 +1,13 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
+import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
 
@@ -126,5 +128,10 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //        }
 //    }
 
-
+    override fun onDestroy() {
+        super.onDestroy()
+        val intent = Intent(this, MusicService::class.java)
+        stopService(intent)
+        //unbindService()
+    }
 }

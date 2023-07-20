@@ -139,11 +139,12 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             val intent = Intent(this@PlayerActivity, MusicService::class.java)
                             intent.putExtra("url",url)
 
-                            Log.e("serviceMusic","Start")
+                            //Log.e("serviceMusic","Start")
                             bindService(
                                 intent, mServiceConnection,
                                 BIND_AUTO_CREATE
                             )
+                            startService(intent)
                         }
                     }
                 }
@@ -184,6 +185,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             finish()
         }
         binding.icPlay.setOnClickListener {
+            //mediaPlayer.prepare()
+            println(mediaPlayer)
             if (count%2==0){
                 handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()
@@ -192,6 +195,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 //"暂停".showToast(this)
                 it.background=  getDrawable(R.drawable.ic_play_circle_2)
                 if (mediaPlayer.isPlaying){
+
                     mediaPlayer.pause()//暂停播放
                 }
             }else{
@@ -251,8 +255,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     override fun onDestroy() {
         super.onDestroy()
-        val intent = Intent(this, MusicService::class.java)
-        stopService(intent)
+
 //        mediaPlayer.stop()
 //        mediaPlayer.release()
     }

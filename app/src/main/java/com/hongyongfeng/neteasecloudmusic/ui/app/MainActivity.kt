@@ -1,18 +1,24 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
+import android.animation.ObjectAnimator
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
-import android.util.Log
+import android.os.Looper
+import android.os.Message
+import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
+import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
+import com.hongyongfeng.neteasecloudmusic.ui.widget.MusicRoundProgressView
 
 
 class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate) {
@@ -26,7 +32,12 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //        }
 //        return super.dispatchTouchEvent(ev)
 //    }
+    /**
+     * 图片动画
+     */
+    private lateinit var logoAnimation: ObjectAnimator
     var mBackPressed: Long = 0
+    private lateinit var musicProgress: MusicRoundProgressView
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
         }
@@ -68,12 +79,54 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         }
 
     }
+    private val mHandler: Handler = object :Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            // 展示给进度条和当前时间
+            if (mediaPlayer.isPlaying){
+                val progress = mediaPlayer.currentPosition
+                musicProgress.setProgress(progress, mediaPlayer.duration)
+            }
+
+            //更新进度
+            updateProgress()
+        }
+    }
+    /**
+     * 更新进度
+     */
+    private fun updateProgress() {
+        // 使用Handler每间隔1s发送一次空消息，通知进度条更新
+        // 使用MediaPlayer获取当前播放时间除以总时间的进度
+        mHandler.sendEmptyMessageDelayed(0, 1000)
+    }
+
+    /**
+     * 初始化动画
+     */
+    private fun initAnimation() {
+        logoAnimation = ObjectAnimator.ofFloat(binding.ivLogo, "rotation", 0.0f, 360.0f)
+        logoAnimation.setDuration(3000)
+        logoAnimation.interpolator = LinearInterpolator()
+        logoAnimation.repeatCount = -1
+        logoAnimation.repeatMode = ObjectAnimator.RESTART
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding.layBottom.setOnClickListener {
+            //"底部".showToast(this)
+            val intent=Intent(this, PlayerActivity::class.java)
+            startActivity(intent)
+
+        }
+        musicProgress=binding.musicProgress
+        initAnimation()
+        logoAnimation.start()
+        updateProgress()
         //StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
 //        setContentView(binding.root)
-//        val window: Window = getWindow()
-//        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN )
+////        val window: Window = getWindow()
+////        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN )
 
 
         //initListener()

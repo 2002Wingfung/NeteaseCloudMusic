@@ -21,6 +21,7 @@ import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
+import com.hongyongfeng.neteasecloudmusic.util.ImageLoader
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
@@ -37,6 +38,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private val publicViewModel: PublicViewModel? by lazy{
         ViewModelProvider(this)[PublicViewModel::class.java]
     }
+    private lateinit var imageLoader: ImageLoader
+
     private var albumId: Int=0
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
@@ -106,9 +109,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        imageLoader= ImageLoader.build(this)
         Log.e("MyPlayerActivity","onCreate")
         val bundle = intent.extras
-        binding.tvTitle.text=bundle?.getString("name")
+        val name=bundle?.getString("name")
+        binding.tvTitle.text=name
         val albumIdResult=bundle?.getInt("albumId")
         if (albumIdResult!=null){
             albumId=albumIdResult
@@ -116,6 +121,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }
         val songId=bundle?.getInt("id")
 
+        val singer=bundle?.getString("singer")
         if (songId!=null){
             //储存id到sp，然后每次进行oncreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaplayer，
             //如果不一样则重置
@@ -126,6 +132,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 songsRequest(songId)
                 prefs.edit{
                     putInt("songId",songId)
+                    putString("songName",name)
+                    putString("singer",singer)
+                    putInt("albumId",albumId)
                 }
             }else if (songIdOrigin!=songId){
                 Log.e("MyPlayerActivity","与上一首不是同一首歌")
@@ -166,7 +175,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 
         }
 
-        binding.tvSinger.text=bundle?.getString("singer")
+        binding.tvSinger.text=singer
 
         transparentNavBar(this)
         initView(binding, StatusBarUtils.getStatusBarHeight(this as AppCompatActivity)+5)
@@ -253,6 +262,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                                 BIND_AUTO_CREATE
                             )
                             startService(intent)
+                            //每次启动服务的时候把List<Song>用bundle传参，这样就可以把列表的数据传到Service中去了
+                            //在点击列表的时候把当前列表的List保存到数据库中，用room
+                            //在数据库表中加一列做是否当前正在播放，将正在播放的显示在MainActivity的底部播放器和通知栏播放器中
                         }
                     }
                 }
@@ -279,8 +291,15 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             val url=it.response.songs[0].al.picUrl
                             //println("picUrl:$url")
 
-                            Picasso.get().load(url)
-                                .into(binding.imgAlbum)
+                            //Picasso.get().load(url).resize(512,512).into(binding.imgAlbum)
+                            Picasso.get().load(url).fit().into(binding.imgAlbum)
+//                            imageLoader.bindBitmap(
+//                                url,
+//                                binding.imgAlbum,
+//                                1024,
+//                                1024
+//                            )
+
                         }
                     }
                 }

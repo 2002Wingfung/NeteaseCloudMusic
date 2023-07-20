@@ -57,7 +57,7 @@ class MusicService : Service() {
 
         if (url != null) {
             //if (!isFirst){
-                Player.initMediaPlayer(url, mediaPlayer,{
+                Player().initMediaPlayer(url, mediaPlayer,{
                     //在Service服务类中发送广播消息给Activity活动界面
                     val intentBroadcastReceiver =Intent();
                     intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;

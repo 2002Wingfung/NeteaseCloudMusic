@@ -119,9 +119,7 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         recyclerViewEstablish = binding.rvEstablish
     }
     private fun initListener(binding:FragmentMainBinding) {
-        binding.layoutBottomPlayer.setOnClickListener {
-            //mActivity.supportFragmentManager.beginTransaction().add(R.id.app_nav,PlayerFragment()).commit()
-        }
+
         adapterCollect.setOnItemClickListener {
             view:View,position:Int->
 //            position.showToast(activity)

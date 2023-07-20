@@ -1,16 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.fragment.app.FragmentContainerView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:id="@+id/app_nav"
-    android:name="androidx.navigation.fragment.NavHostFragment"
-    app:defaultNavHost="true"
+    android:id="@+id/layout_main"
     android:layout_height="match_parent"
-    app:navGraph="@navigation/nav_app"
-    android:layout_weight="1"
     tools:context=".ui.app.MainActivity">
 
+    <androidx.fragment.app.FragmentContainerView
+        android:layout_width="match_parent"
+        android:id="@+id/app_nav"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        app:defaultNavHost="true"
+        android:layout_height="0dp"
+        app:navGraph="@navigation/nav_app"
+        android:layout_weight="1"
+        tools:context=".ui.app.MainActivity">
 
-</androidx.fragment.app.FragmentContainerView>
+
+    </androidx.fragment.app.FragmentContainerView>
+    <LinearLayout
+        android:id="@+id/lay_bottom"
+        android:layout_width="match_parent"
+
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp">
+
+        <!-- logo和播放进度 使用相对布局达成覆盖的效果-->
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <!--logo-->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/iv_logo"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="1dp"
+                android:src="@drawable/ic_cloud_music"
+                app:shapeAppearanceOverlay="@style/circleImageStyle"
+                app:strokeColor="@color/white"
+                app:strokeWidth="2dp" />
+            <!--播放进度  自定义View-->
+            <com.hongyongfeng.neteasecloudmusic.ui.widget.MusicRoundProgressView
+                android:id="@+id/music_progress"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:radius="20dp"
+                app:strokeColor="#A1FFFF"
+                app:strokeWidth="2dp" />
+        </RelativeLayout>
+
+        <!--歌曲信息  歌名 - 歌手 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_song_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:singleLine="true"
+            android:text="Good Music"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+        <!--歌曲控制按钮-->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_play"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:onClick="onClick"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"
+            app:backgroundTint="@color/transparent"
+            app:cornerRadius="18dp"
+            app:icon="@drawable/ic_play_circle_2"
+            app:iconTint="@color/gray"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="36dp" />
+    </LinearLayout>
+</LinearLayout>

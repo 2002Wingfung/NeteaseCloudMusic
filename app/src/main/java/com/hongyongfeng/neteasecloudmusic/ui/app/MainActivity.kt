@@ -27,7 +27,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //        return super.dispatchTouchEvent(ev)
 //    }
     var mBackPressed: Long = 0
-
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+        }
+        override fun onServiceDisconnected(name: ComponentName) {}
+    }
     override fun onBackPressed() {
         supportFragmentManager.fragments[0].apply {
             if (this.childFragmentManager.fragments[0] is MainFragment){
@@ -110,6 +114,8 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //            }
 //            false
 //        }
+        val intent = Intent(this@MainActivity, MusicService::class.java)
+        bindService(intent,mServiceConnection,BIND_AUTO_CREATE)
 
     }
 
@@ -135,11 +141,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         super.onDestroy()
         val intent = Intent(this, MusicService::class.java)
         stopService(intent)
-        val mServiceConnection: ServiceConnection = object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            }
-            override fun onServiceDisconnected(name: ComponentName) {}
-        }
+
         unbindService(mServiceConnection)
     }
 

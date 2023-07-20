@@ -28,26 +28,26 @@ class MusicService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         //TODO("Not yet implemented")
-        isFirst=true
-        val url=intent?.getStringExtra("url")
-
-        if (url != null) {
-            Player.initMediaPlayer(url, mediaPlayer,{
-                //在Service服务类中发送广播消息给Activity活动界面
-                val intentBroadcastReceiver =Intent();
-                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-                sendBroadcast(intentBroadcastReceiver);
-            },{
-                val intentBroadcastReceiver =Intent();
-                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-                intentBroadcastReceiver.putExtra("percent",it)
-                sendBroadcast(intentBroadcastReceiver);
-            }){
-                val intentBroadcastReceiver =Intent();
-                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_COMPLETE;
-                sendBroadcast(intentBroadcastReceiver);
-            }
-        }
+//        isFirst=true
+//        val url=intent?.getStringExtra("url")
+//
+//        if (url != null) {
+//            Player.initMediaPlayer(url, mediaPlayer,{
+//                //在Service服务类中发送广播消息给Activity活动界面
+//                val intentBroadcastReceiver =Intent();
+//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+//                sendBroadcast(intentBroadcastReceiver);
+//            },{
+//                val intentBroadcastReceiver =Intent();
+//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+//                intentBroadcastReceiver.putExtra("percent",it)
+//                sendBroadcast(intentBroadcastReceiver);
+//            }){
+//                val intentBroadcastReceiver =Intent();
+//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_COMPLETE;
+//                sendBroadcast(intentBroadcastReceiver);
+//            }
+//        }
         return mBinder
     }
 
@@ -56,7 +56,7 @@ class MusicService : Service() {
         val url=intent?.getStringExtra("url")
 
         if (url != null) {
-            if (!isFirst){
+            //if (!isFirst){
                 Player.initMediaPlayer(url, mediaPlayer,{
                     //在Service服务类中发送广播消息给Activity活动界面
                     val intentBroadcastReceiver =Intent();
@@ -71,9 +71,9 @@ class MusicService : Service() {
                 }){
 
                 }
-            }else{
-                isFirst=false
-            }
+//            }else{
+//                isFirst=false
+//            }
         }
 //        refresh(seekBar,mediaPlayer)
         return super.onStartCommand(intent, flags, startId)

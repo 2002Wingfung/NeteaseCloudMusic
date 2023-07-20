@@ -19,6 +19,7 @@ import com.hongyongfeng.neteasecloudmusic.adapter.PlayListAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
+import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel

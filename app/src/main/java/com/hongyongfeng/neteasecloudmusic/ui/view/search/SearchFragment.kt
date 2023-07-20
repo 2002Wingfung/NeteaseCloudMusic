@@ -39,29 +39,26 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
     private lateinit var edtSearch:EditText
     private lateinit var publicViewModel: PublicViewModel
     private lateinit var viewModel: HotViewModel
-
-    private var controller: NavController?=null
+    private var count=0
     private var num=1
     override fun onResume() {
         super.onResume()
         //println(456)
         val edt=binding.edtSearch
         if (edt.text.toString()!=""){
-            edt.setText("")
+            //
+            if (count==1){
+                edt.setText("")
+                count=0
+            }
         }
         edt.isFocusable = true
         edt.isFocusableInTouchMode = true
-//        edt.requestFocus()
-//        edt.findFocus()
         val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        //imm.showSoftInput(edt, InputMethodManager.SHOW_FORCED)
-
         imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
         edt.requestFocus()
         edt.findFocus()
         //
-
-
     }
 
     override fun initFragment(
@@ -80,21 +77,20 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
         }
         edtSearch=binding.edtSearch
 
+        count=1
         if (!this::mActivity.isInitialized){
             mActivity=requireActivity()
             this.viewModel.editText.observe(mActivity, Observer {
                     editText->
                 binding.edtSearch.setText(editText)
                 search(editText)
-                //println(123456)
-
                 //退出SearchFragment之后，重新进入，他又会执行这个方法，应该是和重走生命周期有关
             })
         }
     }
 
 
-    fun search(text:String){
+    private fun search(text:String){
         //text.showToast(mActivity)
         if (edtSearch.text.toString()!=text){
             edtSearch.setText(text)

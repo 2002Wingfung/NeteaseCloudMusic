@@ -1,7 +1,10 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
+import android.content.ComponentName
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -23,7 +26,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //        }
 //        return super.dispatchTouchEvent(ev)
 //    }
-    private var mBackPressed: Long = 0
+    var mBackPressed: Long = 0
 
     override fun onBackPressed() {
         supportFragmentManager.fragments[0].apply {
@@ -132,6 +135,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         super.onDestroy()
         val intent = Intent(this, MusicService::class.java)
         stopService(intent)
-        //unbindService()
+        val mServiceConnection: ServiceConnection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            }
+            override fun onServiceDisconnected(name: ComponentName) {}
+        }
+        unbindService(mServiceConnection)
     }
 }

@@ -39,8 +39,12 @@ class MusicService : Service() {
         Log.e("MyService",mediaPlayers.toString())
         val url=intent?.getStringExtra("url")
 
-        if (url != null&&!isFirst) {
-            Player.initMediaPlayer(url, mediaPlayers)
+        if (url != null) {
+            if (!isFirst){
+                Player.initMediaPlayer(url, mediaPlayers)
+            }else{
+                isFirst=false
+            }
         }
 //        refresh(seekBar,mediaPlayer)
         return super.onStartCommand(intent, flags, startId)

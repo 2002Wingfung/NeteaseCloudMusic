@@ -2,6 +2,7 @@ package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.animation.ObjectAnimator
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.media.MediaPlayer
@@ -13,6 +14,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.hongyongfeng.neteasecloudmusic.R
@@ -63,6 +65,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.e("MyPlayerActivity","onCreate")
         val bundle = intent.extras;
         binding.tvTitle.text=bundle?.getString("name")
         val albumIdResult=bundle?.getInt("albumId")
@@ -71,8 +74,46 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             picRequest(albumId)
         }
         val songId=bundle?.getInt("id")
+
         if (songId!=null){
-            songsRequest(songId)
+            //储存id到sp，然后每次进行oncreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaplayer，
+            //如果不一样则重置
+            println("songId is $songId")
+            val prefs=getSharedPreferences("player",Context.MODE_PRIVATE)
+            val songIdOrigin=prefs.getInt("songId",-1)
+            if (songIdOrigin!=songId){
+                Log.e("MyPlayerActivity","与上一首不是同一首歌")
+
+//                if (mediaPlayer.isPlaying){
+//
+//                }
+                if (::mediaPlayer.isInitialized){
+                    mediaPlayer.stop()
+                    mediaPlayer.reset()
+                }else{
+                    Log.e("MyPlayerActivity","not init")
+                    //现在播放不同的歌曲会导致上一首歌曲不能停止
+                }
+                songsRequest(songId)
+
+                prefs.edit{
+                    putInt("songId",songId)
+                }
+            }else{
+                Log.e("MyPlayerActivity","是同一首歌")
+
+                if (::mediaPlayer.isInitialized){
+                    if (!mediaPlayer.isPlaying){
+                        mediaPlayer.stop()
+                        mediaPlayer.reset()
+                        songsRequest(songId)
+                    }
+                }else{
+                    songsRequest(songId)
+                }
+
+            }
+
         }
         binding.tvSinger.text=bundle?.getString("singer")
 
@@ -186,7 +227,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }
         binding.icPlay.setOnClickListener {
             //mediaPlayer.prepare()
-            println(mediaPlayer)
+            //println(mediaPlayer)
             if (count%2==0){
                 handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()
@@ -256,6 +297,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     override fun onDestroy() {
         super.onDestroy()
 
+        Log.e("MyPlayerActivity","onDestroy")
 //        mediaPlayer.stop()
 //        mediaPlayer.release()
     }

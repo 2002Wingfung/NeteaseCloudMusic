@@ -17,6 +17,7 @@ class RecentlyFragment: BaseFragment<FragmentRecentlyBinding, ViewModel>(
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?
     ) {
+
     }
 
     override fun initListener() {

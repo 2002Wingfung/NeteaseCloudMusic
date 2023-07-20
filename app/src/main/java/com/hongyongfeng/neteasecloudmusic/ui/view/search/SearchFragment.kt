@@ -83,6 +83,7 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
             this.viewModel.editText.observe(mActivity, Observer {
                     editText->
                 binding.edtSearch.setText(editText)
+                println(editText.toString())
                 search(editText)
                 //退出SearchFragment之后，重新进入，他又会执行这个方法，应该是和重走生命周期有关
             })

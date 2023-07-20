@@ -20,6 +20,7 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
 import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
+import com.hongyongfeng.neteasecloudmusic.ui.view.player.PlayerFragment
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
@@ -118,6 +119,9 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         recyclerViewEstablish = binding.rvEstablish
     }
     private fun initListener(binding:FragmentMainBinding) {
+        binding.layoutBottomPlayer.setOnClickListener {
+            //mActivity.supportFragmentManager.beginTransaction().add(R.id.app_nav,PlayerFragment()).commit()
+        }
         adapterCollect.setOnItemClickListener {
             view:View,position:Int->
 //            position.showToast(activity)

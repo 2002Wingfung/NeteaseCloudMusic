@@ -134,7 +134,6 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         })
         adapter.setOnItemClickListener { view, position ->
             val songs=listSongs[position]
-            //println(songs.name)
             val intent=Intent(mActivity, PlayerActivity::class.java)
             val bundle=Bundle()
             bundle.putString("name",songs.name)

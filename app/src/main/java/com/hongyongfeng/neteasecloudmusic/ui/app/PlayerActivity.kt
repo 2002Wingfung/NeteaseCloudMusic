@@ -23,6 +23,7 @@ import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
+import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
@@ -42,12 +43,12 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
-    private lateinit var mediaPlayer:MediaPlayer
+    //private lateinit var mediaPlayer:MediaPlayer
     private lateinit var seekBar: SeekBar
     private var mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            val myService: MusicService = (service as MusicService.MediaPlayerBinder).getMusicService()
-            mediaPlayer = myService.getMediaPlayer()
+//            val myService: MusicService = (service as MusicService.MediaPlayerBinder).getMusicService()
+//            mediaPlayer = myService.getMediaPlayer()
         }
 
         override fun onServiceDisconnected(name: ComponentName) {}
@@ -81,36 +82,45 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             println("songId is $songId")
             val prefs=getSharedPreferences("player",Context.MODE_PRIVATE)
             val songIdOrigin=prefs.getInt("songId",-1)
-            if (songIdOrigin!=songId){
+            if (songIdOrigin==-1){
+                songsRequest(songId)
+                prefs.edit{
+                    putInt("songId",songId)
+                }
+            }else if (songIdOrigin!=songId){
                 Log.e("MyPlayerActivity","与上一首不是同一首歌")
 
-//                if (mediaPlayer.isPlaying){
-//
-//                }
-                if (::mediaPlayer.isInitialized){
+                if (mediaPlayer.isPlaying){
                     mediaPlayer.stop()
                     mediaPlayer.reset()
                 }else{
-                    Log.e("MyPlayerActivity","not init")
-                    //现在播放不同的歌曲会导致上一首歌曲不能停止
+                    mediaPlayer.reset()
+
                 }
+                //if (::mediaPlayer.isInitialized){
+
+                //}else{
+                    //Log.e("MyPlayerActivity","not init")
+                    //现在播放不同的歌曲会导致上一首歌曲不能停止
+                //}
                 songsRequest(songId)
 
                 prefs.edit{
                     putInt("songId",songId)
                 }
-            }else{
+            }else
+            {
                 Log.e("MyPlayerActivity","是同一首歌")
 
-                if (::mediaPlayer.isInitialized){
+                //if (::mediaPlayer.isInitialized){
                     if (!mediaPlayer.isPlaying){
                         mediaPlayer.stop()
                         mediaPlayer.reset()
                         songsRequest(songId)
                     }
-                }else{
-                    songsRequest(songId)
-                }
+                //}else{
+                    //songsRequest(songId)
+                //}
 
             }
 

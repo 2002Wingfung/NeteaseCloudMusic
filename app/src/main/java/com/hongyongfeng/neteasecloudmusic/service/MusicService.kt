@@ -6,6 +6,8 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
+import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.player.utli.Player
 
 class MusicService : Service() {
@@ -30,7 +32,12 @@ class MusicService : Service() {
         val url=intent?.getStringExtra("url")
 
         if (url != null) {
-            Player.initMediaPlayer(url, mediaPlayer)
+            Player.initMediaPlayer(url, mediaPlayer){
+                //在Service服务类中发送广播消息给Activity活动界面
+                val intentBroadcastReceiver =Intent();
+                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                sendBroadcast(intentBroadcastReceiver);
+            }
         }
         return mBinder
     }
@@ -41,10 +48,16 @@ class MusicService : Service() {
 
         if (url != null) {
             if (!isFirst){
-                Player.initMediaPlayer(url, mediaPlayer)
+                Player.initMediaPlayer(url, mediaPlayer){
+                    //在Service服务类中发送广播消息给Activity活动界面
+                    val intentBroadcastReceiver =Intent();
+                    intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                    sendBroadcast(intentBroadcastReceiver);
+                }
             }else{
                 isFirst=false
             }
+
         }
 //        refresh(seekBar,mediaPlayer)
         return super.onStartCommand(intent, flags, startId)

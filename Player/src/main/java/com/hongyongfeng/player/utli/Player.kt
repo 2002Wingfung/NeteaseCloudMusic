@@ -15,21 +15,22 @@ class Player {
     companion object{
         @JvmStatic
 
-        fun initMediaPlayer(url :String,mediaPlayer:MediaPlayer){
+        fun initMediaPlayer(url :String,mediaPlayer:MediaPlayer,listener:()->Unit){
 
             mediaPlayer.setDataSource(url) //设置播放来源
 
             //mediaPlayer.prepare()
             mediaPlayer.prepareAsync() //异步准备
-            //seekBar.max=mediaPlayer.duration
-            //发送广播
+
+
 
             mediaPlayer.setOnPreparedListener { mediaPlayer2 ->
 
-
+            //seekBar.max=mediaPlayer.duration
+                listener()
+                //发送广播
                 //异步准备监听
                 Log.d("myPlayer","Voice异步文件准备完成")
-                //mediaPlayer2.prepare()
                 Log.d("myPlayer","Voice异步文件时长"+ (mediaPlayer2.duration / 1000).toString())
                 mediaPlayer2.start() //播放
             }

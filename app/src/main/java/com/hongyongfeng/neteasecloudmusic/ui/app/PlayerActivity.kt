@@ -1,10 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.animation.ObjectAnimator
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.media.MediaPlayer
 import android.os.*
 import android.util.Log
@@ -45,6 +42,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
     //private lateinit var mediaPlayer:MediaPlayer
     private lateinit var seekBar: SeekBar
+    companion object {
+        const val ACTION_SERVICE_NEED: String="action.ServiceNeed"
+    }
     private var mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
 //            val myService: MusicService = (service as MusicService.MediaPlayerBinder).getMusicService()
@@ -54,6 +54,13 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         override fun onServiceDisconnected(name: ComponentName) {}
     }
 
+    internal inner class ServiceBroadcastReceiver(): BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            seekBar.max=mediaPlayer.duration
+            refresh(seekBar, mediaPlayer)
+        }
+
+    }
     private var handler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
@@ -67,7 +74,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.e("MyPlayerActivity","onCreate")
-        val bundle = intent.extras;
+        val bundle = intent.extras
         binding.tvTitle.text=bundle?.getString("name")
         val albumIdResult=bundle?.getInt("albumId")
         if (albumIdResult!=null){
@@ -125,6 +132,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
 
         }
+
         binding.tvSinger.text=bundle?.getString("singer")
 
         transparentNavBar(this)
@@ -161,12 +169,23 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 
     // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
 
+        register()
+    }
+    private fun register(){
+        val filter = IntentFilter()
+        filter.addAction(ACTION_SERVICE_NEED)
+
+        registerReceiver(ServiceBroadcastReceiver(), filter);
     }
     private fun initView(binding: ActivityPlayerBinding, dp:Int){
         val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
         lp.topMargin= dp
         binding.layoutActionBar.layoutParams = lp
         seekBar=binding.seekBar
+        if (mediaPlayer.isPlaying){
+            seekBar.max=mediaPlayer.duration
+            refresh(seekBar, mediaPlayer)
+        }
     }
     private fun songsRequest(songId:Int){
         //请求音频文件的代码
@@ -286,9 +305,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 //当拖动停止后，控制mediaPlayer播放指定位置的音乐
-                mediaPlayer.seekTo(seekBar!!.progress)
+                seekBar!!.max= mediaPlayer.duration
+                mediaPlayer.seekTo(seekBar.progress)
                 MusicService.isChanging=false;
 
+                //println(seekBar.progress)
             }
 
         })

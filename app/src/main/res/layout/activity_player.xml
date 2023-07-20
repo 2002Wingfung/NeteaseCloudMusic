@@ -227,14 +227,46 @@
         app:layout_constraintTop_toTopOf="@id/guideline"
         android:alpha="0.2"
         android:background="@android:color/black"/>
-    <SeekBar
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="15dp"
-        android:id="@+id/seek_bar"
-        android:thumb="@drawable/thumb_circle"
-        android:progressTint="#CFCFCF"
-        android:secondaryProgressTint="#FFFFFF"
-        app:layout_constraintTop_toTopOf="@id/guideline"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="19dp"
+        android:layout_marginEnd="19dp"
+        app:layout_constraintTop_toTopOf="@id/guideline"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/tv_current"
+            android:text="00:00"
+            android:layout_marginTop="-1dp"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            />
+        <SeekBar
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="17dp"
+            android:id="@+id/seek_bar"
+            android:thumb="@drawable/thumb_circle"
+            android:progressTint="#CFCFCF"
+
+            android:secondaryProgressTint="#FFFFFF"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/tv_total"
+            android:text="00:00"
+            android:layout_marginTop="-1dp"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            />
+    </LinearLayout>
+
 
 
     <androidx.constraintlayout.widget.Guideline

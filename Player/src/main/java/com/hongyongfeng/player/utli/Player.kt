@@ -1,21 +1,14 @@
 package com.hongyongfeng.player.utli
 
-import android.app.Activity
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
 import android.media.MediaPlayer
-import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
-import android.widget.Toast
 
 
 class Player {
     companion object{
         @JvmStatic
 
-        fun initMediaPlayer(url :String,mediaPlayer:MediaPlayer,listener:()->Unit,listener2: (i:Int) -> Unit){
+        fun initMediaPlayer(url :String,mediaPlayer:MediaPlayer,listener:()->Unit,listener2: (i:Int) -> Unit,listener3: () -> Unit){
 
             mediaPlayer.setDataSource(url) //设置播放来源
 
@@ -46,8 +39,10 @@ class Player {
                 println("Voice文件长度"+ (mediaPlayer1.duration / 1000).toString())
             }
             mediaPlayer.setOnCompletionListener {
+                listener3()
                 Log.d("MediaPlayer","播放已完成,准备播放下一首")
                 it.reset()
+
             }
         }
     }

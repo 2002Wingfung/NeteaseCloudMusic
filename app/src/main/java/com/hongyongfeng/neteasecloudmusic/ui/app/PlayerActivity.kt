@@ -28,6 +28,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.math.roundToInt
 
 
 public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
@@ -40,10 +41,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
-    //private lateinit var mediaPlayer:MediaPlayer
     private lateinit var seekBar: SeekBar
+    private lateinit var timer:Timer
     companion object {
         const val ACTION_SERVICE_NEED: String="action.ServiceNeed"
+        const val ACTION_SERVICE_COMPLETE: String="action.ServiceComplete"
     }
     private var mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -54,7 +56,14 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         override fun onServiceDisconnected(name: ComponentName) {}
     }
 
-    internal inner class ServiceBroadcastReceiver(): BroadcastReceiver() {
+    internal inner class CompleteReceiver:BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            timer.cancel()
+            "播放已完成".showToast(this@PlayerActivity)
+        }
+
+    }
+    internal inner class ServiceBroadcastReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val percent=intent?.getIntExtra("percent",-1)
             val duration= mediaPlayer.duration
@@ -64,8 +73,24 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }else{
                 seekBar.max=mediaPlayer.duration
                 seekBar.secondaryProgress = percent!!*duration/100
+                //binding.tvTotal.text=time(duration)
             }
+        }
+    }
+    private fun time(time:Int):String{
+        val min=(time/1000f/60).toInt()
+        val s=(time-min*60*1000)/1000f.roundToInt()
 
+        return if (min==1&&s==10){
+            "0$min:$s"
+        }else if(min<10&&s<10){
+            "0$min:0$s"
+        }else if (min<10&&s>10){
+            "0$min:$s"
+        }else if (min>10&&s<10){
+            "$min:0$s"
+        }else{
+            "$min:$s"
         }
 
     }
@@ -184,6 +209,10 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         filter.addAction(ACTION_SERVICE_NEED)
 
         registerReceiver(ServiceBroadcastReceiver(), filter);
+        val filterComplete = IntentFilter()
+        filterComplete.addAction(ACTION_SERVICE_COMPLETE)
+        registerReceiver(CompleteReceiver(), filterComplete);
+
     }
     private fun initView(binding: ActivityPlayerBinding, dp:Int){
         val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
@@ -216,7 +245,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 //                            Player.initMediaPlayer(url, mediaPlayer,seekBar)
                             val intent = Intent(this@PlayerActivity, MusicService::class.java)
                             intent.putExtra("url",url)
-
+                            //intent.putExtra("time",it.response.data[0].time)
+                            binding.tvTotal.text=time(it.response.data[0].time)
                             //Log.e("serviceMusic","Start")
                             bindService(
                                 intent, mServiceConnection,
@@ -303,6 +333,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 //MusicService.isChanging=true;
+                //println("progress is $progress")
+                binding.tvCurrent.text=time(progress)
 
             }
 
@@ -323,14 +355,16 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         })
     }
     private fun refresh(seekBar: SeekBar, mediaPlayer:MediaPlayer){
-        Timer().schedule(object : TimerTask(){
+        timer=Timer()
+        timer.schedule(object : TimerTask(){
             override fun run() {
                 if (!MusicService.isChanging){
                     //当用户正在拖动进度进度条时不处理进度条的的进度
                     seekBar.progress = mediaPlayer.currentPosition
                 }
             }
-        },0,10)
+        },0,300)
+
     }
     override fun onDestroy() {
         super.onDestroy()

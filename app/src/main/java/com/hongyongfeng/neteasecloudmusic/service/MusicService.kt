@@ -37,10 +37,14 @@ class MusicService : Service() {
                 val intentBroadcastReceiver =Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
                 sendBroadcast(intentBroadcastReceiver);
-            }){
+            },{
                 val intentBroadcastReceiver =Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
                 intentBroadcastReceiver.putExtra("percent",it)
+                sendBroadcast(intentBroadcastReceiver);
+            }){
+                val intentBroadcastReceiver =Intent();
+                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_COMPLETE;
                 sendBroadcast(intentBroadcastReceiver);
             }
         }
@@ -59,11 +63,13 @@ class MusicService : Service() {
                     intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
 
                     sendBroadcast(intentBroadcastReceiver);
-                }){
+                },{
                     val intentBroadcastReceiver =Intent();
                     intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
                     intentBroadcastReceiver.putExtra("percent",it)
                     sendBroadcast(intentBroadcastReceiver);
+                }){
+
                 }
             }else{
                 isFirst=false

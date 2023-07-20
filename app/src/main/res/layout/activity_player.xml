@@ -229,8 +229,11 @@
         android:background="@android:color/black"/>
     <SeekBar
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="15dp"
         android:id="@+id/seek_bar"
+        android:thumb="@drawable/thumb_circle"
+        android:progressTint="#CFCFCF"
+        android:secondaryProgressTint="#FFFFFF"
         app:layout_constraintTop_toTopOf="@id/guideline"/>
 
 

@@ -56,8 +56,16 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 
     internal inner class ServiceBroadcastReceiver(): BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            seekBar.max=mediaPlayer.duration
-            refresh(seekBar, mediaPlayer)
+            val percent=intent?.getIntExtra("percent",-1)
+            val duration= mediaPlayer.duration
+            if (percent==-1){
+                seekBar.max=duration
+                refresh(seekBar, mediaPlayer)
+            }else{
+                seekBar.max=mediaPlayer.duration
+                seekBar.secondaryProgress = percent!!*duration/100
+            }
+
         }
 
     }
@@ -322,12 +330,10 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     seekBar.progress = mediaPlayer.currentPosition
                 }
             }
-
         },0,10)
     }
     override fun onDestroy() {
         super.onDestroy()
-
         Log.e("MyPlayerActivity","onDestroy")
 //        mediaPlayer.stop()
 //        mediaPlayer.release()

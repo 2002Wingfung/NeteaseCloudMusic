@@ -15,7 +15,7 @@ class Player {
     companion object{
         @JvmStatic
 
-        fun initMediaPlayer(url :String,mediaPlayer:MediaPlayer,listener:()->Unit){
+        fun initMediaPlayer(url :String,mediaPlayer:MediaPlayer,listener:()->Unit,listener2: (i:Int) -> Unit){
 
             mediaPlayer.setDataSource(url) //设置播放来源
 
@@ -38,6 +38,7 @@ class Player {
 
 
             mediaPlayer.setOnBufferingUpdateListener { mediaPlayer1, i ->
+                listener2(i)
                 Log.d("percent",i.toString())
                 //文件缓冲监听
                 //println("Voice进度: $i%")

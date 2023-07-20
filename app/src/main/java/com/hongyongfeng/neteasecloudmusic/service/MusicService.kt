@@ -32,10 +32,15 @@ class MusicService : Service() {
         val url=intent?.getStringExtra("url")
 
         if (url != null) {
-            Player.initMediaPlayer(url, mediaPlayer){
+            Player.initMediaPlayer(url, mediaPlayer,{
                 //在Service服务类中发送广播消息给Activity活动界面
                 val intentBroadcastReceiver =Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                sendBroadcast(intentBroadcastReceiver);
+            }){
+                val intentBroadcastReceiver =Intent();
+                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                intentBroadcastReceiver.putExtra("percent",it)
                 sendBroadcast(intentBroadcastReceiver);
             }
         }
@@ -48,16 +53,21 @@ class MusicService : Service() {
 
         if (url != null) {
             if (!isFirst){
-                Player.initMediaPlayer(url, mediaPlayer){
+                Player.initMediaPlayer(url, mediaPlayer,{
                     //在Service服务类中发送广播消息给Activity活动界面
                     val intentBroadcastReceiver =Intent();
                     intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+
+                    sendBroadcast(intentBroadcastReceiver);
+                }){
+                    val intentBroadcastReceiver =Intent();
+                    intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                    intentBroadcastReceiver.putExtra("percent",it)
                     sendBroadcast(intentBroadcastReceiver);
                 }
             }else{
                 isFirst=false
             }
-
         }
 //        refresh(seekBar,mediaPlayer)
         return super.onStartCommand(intent, flags, startId)

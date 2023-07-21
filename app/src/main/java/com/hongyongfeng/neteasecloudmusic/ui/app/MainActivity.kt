@@ -9,22 +9,24 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.Message
+import android.util.Log
+import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.core.view.GravityCompat
 import androidx.lifecycle.ViewModel
 import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
-import androidx.navigation.fragment.findNavController
 import com.google.android.material.navigation.NavigationView
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
+import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
-import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
-import com.hongyongfeng.neteasecloudmusic.ui.widget.MusicRoundProgressView
+import com.hongyongfeng.neteasecloudmusic.util.showToast
+import com.squareup.picasso.Picasso
+import kotlin.concurrent.thread
 
 
 class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate) {
@@ -43,7 +45,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
      */
     private lateinit var logoAnimation: ObjectAnimator
     var mBackPressed: Long = 0
-    private lateinit var musicProgress: MusicRoundProgressView
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
         }
@@ -89,10 +90,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
             // 展示给进度条和当前时间
-            if (mediaPlayer.isPlaying){
-                val progress = mediaPlayer.currentPosition
-                musicProgress.setProgress(progress, mediaPlayer.duration)
-            }
+
 
             //更新进度
             updateProgress()
@@ -104,7 +102,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
     private fun updateProgress() {
         // 使用Handler每间隔1s发送一次空消息，通知进度条更新
         // 使用MediaPlayer获取当前播放时间除以总时间的进度
-        mHandler.sendEmptyMessageDelayed(0, 1000)
+        //mHandler.sendEmptyMessageDelayed(0, 1000)
     }
 
     /**
@@ -116,6 +114,30 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         logoAnimation.interpolator = LinearInterpolator()
         logoAnimation.repeatCount = -1
         logoAnimation.repeatMode = ObjectAnimator.RESTART
+    }
+    private fun initBottomPlayer(){
+        val songDao=AppDatabase.getDatabase(this).songDao()
+        thread {
+            val song=songDao.loadIsPlayingSong()
+            if (song!=null){
+
+                runOnUiThread{
+                    //这个不用改
+                    logoAnimation.start()
+                }
+            }
+            val lastSong=songDao.loadLastPlayingSong()
+            if (lastSong!=null){
+                var url=lastSong.albumUrl
+                if (url.isNullOrEmpty()){
+                    //请求网络获取专辑图片url
+                    url="网络请求获得的url"
+                }
+                //到时候要把加载图片的代码放到判断是否最后一首歌的方法中
+                Picasso.get().load(url).fit().into(binding.ivLogo)
+            }
+
+        }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -153,10 +175,9 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             startActivity(intent)
 
         }
-        musicProgress=binding.musicProgress
         initAnimation()
-        logoAnimation.start()
-        updateProgress()
+        initBottomPlayer()
+        //updateProgress()
         //StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
 //        setContentView(binding.root)
 ////        val window: Window = getWindow()
@@ -224,12 +245,24 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //        }
 //    }
 
+
     override fun onDestroy() {
         super.onDestroy()
         val intent = Intent(this, MusicService::class.java)
         stopService(intent)
 
         unbindService(mServiceConnection)
+    }
+
+    fun onClick(view: View) {
+        "播放".showToast(this)
+
+        val songDao=AppDatabase.getDatabase(this).songDao()
+        thread {
+            for (song in songDao.loadAllSongs()){
+                Log.e("MainActivity",song.toString()+"id:${song.id}")
+            }
+        }
     }
 
 

@@ -2,7 +2,6 @@ package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -11,16 +10,19 @@ import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.adapter.SongsAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentResultBinding
+import com.hongyongfeng.neteasecloudmusic.model.Artists
 import com.hongyongfeng.neteasecloudmusic.model.Songs
+import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
+import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
-import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.concurrent.thread
 
 class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     FragmentResultBinding::inflate,
@@ -91,6 +93,8 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                             //Toast.makeText(requireContext(), "登录成功", Toast.LENGTH_SHORT).show()
                             //findNavController().navigate(R.id.action_loginFragment_to_mainNavFragment)
                         }
+
+                        else -> {}
                     }
                 }
             }
@@ -133,27 +137,49 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             }
         })
         adapter.setOnItemClickListener { view, position ->
+
             val songs=listSongs[position]
             val intent=Intent(mActivity, PlayerActivity::class.java)
             val bundle=Bundle()
             bundle.putString("name",songs.name)
             bundle.putInt("id",songs.id)
             val artistList=songs.getArtists()
-            val artists=java.lang.StringBuilder()
-            for (artist in artistList!!){
-                if (artist == artistList[artistList.size-1]){
-                    artists.append(artist.name)
-                }else{
-                    artists.append(artist.name).append("/")
+
+            //先保存到数据库，然后再跳转Activity
+
+            val songDao=AppDatabase.getDatabase(mActivity).songDao()
+            thread {
+                songDao.deleteAllSong()
+                songDao.clearAutoIncrease()
+                for (songs1 in listSongs){
+                    val song =Song(songs1.name,songs1.id*1L,songs1.getAlbum()!!.id*1L,getArtists(songs1.getArtists()))
+                    song.id=songDao.insertSong(song)
+                    if(song.id-1==position*1L){
+                        song.isPlaying=true
+                        songDao.updateSong(song)
+                    }
                 }
             }
             val albumId=songs.getAlbum()!!.id
             bundle.putInt("albumId",albumId)
-            bundle.putString("singer",artists.toString())
+            bundle.putInt("position",position)
+            bundle.putString("singer",getArtists(artistList))
+            //bundle 传递数据库的list，而不是retrofit返回的list，记得看怎么序列化
             intent.putExtras(bundle)
             startActivity(intent)
 
         }
+    }
+    private fun getArtists(artistList:List<Artists>?):String{
+        val artists=java.lang.StringBuilder()
+        for (artist in artistList!!){
+            if (artist == artistList[artistList.size-1]){
+                artists.append(artist.name)
+            }else{
+                artists.append(artist.name).append("/")
+            }
+        }
+        return artists.toString()
     }
 }
 

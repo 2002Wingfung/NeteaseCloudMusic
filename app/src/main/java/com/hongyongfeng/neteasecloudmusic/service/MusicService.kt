@@ -83,7 +83,12 @@ class MusicService : Service() {
 //    }
     override fun onDestroy() {
         super.onDestroy()
+
         mediaPlayer.stop()
         mediaPlayer.release()
+
+    //将数据库表中的isPlaying字段设为false
+    //开设一个字段lastSong
+    //将最后一首播放的歌曲的lastSong设为true，用于底部播放器和通知栏播放器的显示
     }
 }

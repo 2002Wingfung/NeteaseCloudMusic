@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
+import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
@@ -29,6 +30,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 
@@ -303,6 +305,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 
                             //Picasso.get().load(url).resize(512,512).into(binding.imgAlbum)
                             Picasso.get().load(url).fit().into(binding.imgAlbum)
+                            thread {
+                                val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
+                                songDao.updateAlbumUrl(url,albumId)
+                            }
+
 //                            imageLoader.bindBitmap(
 //                                url,
 //                                binding.imgAlbum,
@@ -333,6 +340,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 if (mediaPlayer.isPlaying){
 
                     mediaPlayer.pause()//暂停播放
+                    thread {
+                        val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
+                        //songDao.updateAlbumUrl(url,albumId)
+                        //将isplaying设为false
+                    }
                 }
             }else{
                 handler.sendEmptyMessageDelayed(1, 700)

@@ -1,6 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -115,6 +116,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         logoAnimation.repeatCount = -1
         logoAnimation.repeatMode = ObjectAnimator.RESTART
     }
+    @SuppressLint("SetTextI18n")
     private fun initBottomPlayer(){
         val songDao=AppDatabase.getDatabase(this).songDao()
         thread {
@@ -124,17 +126,24 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                 runOnUiThread{
                     //这个不用改
                     logoAnimation.start()
+                    binding.btnPlay.setIconResource(R.drawable.ic_pause)
                 }
             }
             val lastSong=songDao.loadLastPlayingSong()
             if (lastSong!=null){
+                val text=lastSong.name+" - "+lastSong.artist
+                binding.tvSongName.text=text
                 var url=lastSong.albumUrl
                 if (url.isNullOrEmpty()){
                     //请求网络获取专辑图片url
+                    //这个要改
                     url="网络请求获得的url"
                 }
-                //到时候要把加载图片的代码放到判断是否最后一首歌的方法中
-                Picasso.get().load(url).fit().into(binding.ivLogo)
+                runOnUiThread{
+                    //到时候要把加载图片的代码放到判断是否最后一首歌的方法中
+                    Picasso.get().load(url).fit().into(binding.ivLogo)
+                }
+
             }
 
         }
@@ -170,9 +179,21 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             false
         }
         binding.layBottom.setOnClickListener {
-            //"底部".showToast(this)
-            val intent=Intent(this, PlayerActivity::class.java)
-            startActivity(intent)
+
+            thread {
+                val songDao=AppDatabase.getDatabase(this).songDao()
+                val lastSong=songDao.loadLastPlayingSong()
+
+                val bundle=Bundle()
+                bundle.putString("name",lastSong?.name)
+                lastSong?.songId?.toInt()?.let { it1 -> bundle.putInt("id", it1) }
+                lastSong?.albumId?.toInt()?.let { it1 -> bundle.putInt("albumId", it1) }
+                bundle.putString("singer",lastSong?.artist)
+                bundle.putInt("status",-1)
+                val intent=Intent(this, PlayerActivity::class.java)
+                intent.putExtras(bundle)
+                startActivity(intent)
+            }
 
         }
         initAnimation()
@@ -222,7 +243,10 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //            }
 //            false
 //        }
+
         val intent = Intent(this@MainActivity, MusicService::class.java)
+
+
         bindService(intent,mServiceConnection,BIND_AUTO_CREATE)
 
     }

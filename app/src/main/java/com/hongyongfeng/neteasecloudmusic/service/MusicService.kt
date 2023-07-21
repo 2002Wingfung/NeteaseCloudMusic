@@ -6,20 +6,24 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
-import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
+import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.player.utli.Player
+import kotlin.concurrent.thread
 
 class MusicService : Service() {
 
-    private val mBinder=MediaPlayerBinder()
-    private var isFirst=false
+    private val mBinder = MediaPlayerBinder()
+    private var isFirst = false
+
     companion object {
         @JvmStatic
-        var isChanging:Boolean=false
+        var isChanging: Boolean = false
+
         @JvmStatic
-        var mediaPlayer=MediaPlayer()
+        var mediaPlayer = MediaPlayer()
     }
+
     internal inner class MediaPlayerBinder : Binder() {
         fun getMusicService(): MusicService {
             return this@MusicService
@@ -52,43 +56,47 @@ class MusicService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.e("MyService",mediaPlayer.toString())
-        val url=intent?.getStringExtra("url")
+        Log.e("MyService", mediaPlayer.toString())
+        val url = intent?.getStringExtra("url")
 
         if (url != null) {
             //if (!isFirst){
-                Player().initMediaPlayer(url, mediaPlayer,{
-                    //在Service服务类中发送广播消息给Activity活动界面
-                    val intentBroadcastReceiver =Intent();
-                    intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+            Player().initMediaPlayer(url, mediaPlayer, {
+                //在Service服务类中发送广播消息给Activity活动界面
+                val intentBroadcastReceiver = Intent();
+                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
 
-                    sendBroadcast(intentBroadcastReceiver);
-                },{
-                    val intentBroadcastReceiver =Intent();
-                    intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-                    intentBroadcastReceiver.putExtra("percent",it)
-                    sendBroadcast(intentBroadcastReceiver);
-                }){
+                sendBroadcast(intentBroadcastReceiver);
+            }, {
+                val intentBroadcastReceiver = Intent();
+                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                intentBroadcastReceiver.putExtra("percent", it)
+                sendBroadcast(intentBroadcastReceiver);
+            }) {
 
-                    //播放完成准备下一首
-                    //监听回调
-                }
+                //播放完成准备下一首
+                //监听回调
+            }
 
         }
         return super.onStartCommand(intent, flags, startId)
     }
 
-//    fun getMediaPlayer():MediaPlayer{
+    //    fun getMediaPlayer():MediaPlayer{
 //        return this.mediaPlayers
 //    }
     override fun onDestroy() {
         super.onDestroy()
-
         mediaPlayer.stop()
         mediaPlayer.release()
-
-    //将数据库表中的isPlaying字段设为false
-    //开设一个字段lastSong
-    //将最后一首播放的歌曲的lastSong设为true，用于底部播放器和通知栏播放器的显示
+        Log.e("MusicService","onDestroy")
+        thread {
+            val songDao= AppDatabase.getDatabase(this).songDao()
+            songDao.unableIsPlaying(false)
+            //设置一个lastplaying
+        }
+        //将数据库表中的isPlaying字段设为false
+        //开设一个字段lastSong
+        //将最后一首播放的歌曲的lastSong设为true，用于底部播放器和通知栏播放器的显示
     }
 }

@@ -1,10 +1,12 @@
 package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.adapter.SongsAdapter
@@ -143,8 +145,16 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             val bundle=Bundle()
             bundle.putString("name",songs.name)
             bundle.putInt("id",songs.id)
-            val artistList=songs.getArtists()
+//            val prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
 
+            val artistList=songs.getArtists()
+            val artists=getArtists(artistList)
+//            prefs.edit{
+//                putInt("lastSongId",songs.id)
+//
+//                putString("lastSongName",songs.name)
+//                putString("lastSongArtist",artists)
+//            }
             //先保存到数据库，然后再跳转Activity
 
             val songDao=AppDatabase.getDatabase(mActivity).songDao()
@@ -156,6 +166,8 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                     song.id=songDao.insertSong(song)
                     if(song.id-1==position*1L){
                         song.isPlaying=true
+                        //以下使得lastPlaying为true的代码要在service中切歌的时候再写一遍
+                        song.lastPlaying=true
                         songDao.updateSong(song)
                     }
                 }
@@ -163,7 +175,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             val albumId=songs.getAlbum()!!.id
             bundle.putInt("albumId",albumId)
             bundle.putInt("position",position)
-            bundle.putString("singer",getArtists(artistList))
+            bundle.putString("singer",artists)
             //bundle 传递数据库的list，而不是retrofit返回的list，记得看怎么序列化
             intent.putExtras(bundle)
             startActivity(intent)

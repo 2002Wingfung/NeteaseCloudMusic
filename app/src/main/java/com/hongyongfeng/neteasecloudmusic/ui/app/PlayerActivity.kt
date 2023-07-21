@@ -111,11 +111,38 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
     }
+    fun initAnimation(){
+        // Object target:目标对象，
+        // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
+        // float... values:一系列这个属性将会到达的值
+        mAnimator= ObjectAnimator.ofFloat(binding.imgAlbum, "rotation", 0f, 720f)
+        val needle=binding.imgNeedle
+        mAnimatorNeedlePause= ObjectAnimator.ofFloat(needle, "rotation", 0f, -30f)
+        mAnimatorNeedleStart= ObjectAnimator.ofFloat(needle, "rotation", -30f, 0f)
+        needle.pivotX=needle.width/1f+62
+        needle.pivotY=needle.height*1f+135
+        mAnimatorNeedlePause.duration = 700
+        mAnimatorNeedlePause.interpolator = LinearInterpolator()
+        mAnimatorNeedleStart.duration = 700
+        mAnimatorNeedleStart.interpolator = LinearInterpolator()
+        // Object target:目标对象，
+        // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
+        // float... values:一系列这个属性将会到达的值
+        // 设置一次动画的时间
+        // 设置一次动画的时间
+        mAnimator.duration = 19000
+        // 设置插值器，用来控制变化率
+        // 设置插值器，用来控制变化率
+        mAnimator.interpolator = LinearInterpolator()
+        // 设置重复的次数，无限
+        mAnimator.repeatCount = ObjectAnimator.INFINITE
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         imageLoader= ImageLoader.build(this)
-        Log.e("MyPlayerActivity","onCreate")
+        initAnimation()
         val bundle = intent.extras
+
         val name=bundle?.getString("name")
         binding.tvTitle.text=name
         val albumIdResult=bundle?.getInt("albumId")
@@ -123,8 +150,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             albumId=albumIdResult
             picRequest(albumId)
         }
-        val songId=bundle?.getInt("id")
 
+        val songId=bundle?.getInt("id")
         val singer=bundle?.getString("singer")
         if (songId!=null){
             //储存id到sp，然后每次进行oncreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaplayer，
@@ -153,8 +180,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 //if (::mediaPlayer.isInitialized){
 
                 //}else{
-                    //Log.e("MyPlayerActivity","not init")
-                    //现在播放不同的歌曲会导致上一首歌曲不能停止
+                //Log.e("MyPlayerActivity","not init")
+                //现在播放不同的歌曲会导致上一首歌曲不能停止
                 //}
                 songsRequest(songId)
 
@@ -166,14 +193,23 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 Log.e("MyPlayerActivity","是同一首歌")
 
                 //if (::mediaPlayer.isInitialized){
+
+                val status=bundle.getInt("status")
+                if (status!=-1){
                     if (!mediaPlayer.isPlaying){
                         mediaPlayer.stop()
                         mediaPlayer.reset()
                         songsRequest(songId)
                     }
-                //}else{
-                    //songsRequest(songId)
-                //}
+                }else{
+                    count++
+                    handler.sendEmptyMessageDelayed(0, 700)
+                    mAnimatorNeedleStart.pause()
+
+                    mAnimatorNeedlePause.start()
+                    //"暂停".showToast(this)
+                    binding.icPlay.background=  getDrawable(R.drawable.ic_play_circle_2)
+                }
 
             }
 
@@ -185,30 +221,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         initView(binding, StatusBarUtils.getStatusBarHeight(this as AppCompatActivity)+5)
         initListener()
 
-    // Object target:目标对象，
-    // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
-    // float... values:一系列这个属性将会到达的值
-        mAnimator= ObjectAnimator.ofFloat(binding.imgAlbum, "rotation", 0f, 720f)
-        val needle=binding.imgNeedle
-        mAnimatorNeedlePause= ObjectAnimator.ofFloat(needle, "rotation", 0f, -30f)
-        mAnimatorNeedleStart= ObjectAnimator.ofFloat(needle, "rotation", -30f, 0f)
-        needle.pivotX=needle.width/1f+62
-        needle.pivotY=needle.height*1f+135
-        mAnimatorNeedlePause.duration = 700
-        mAnimatorNeedlePause.interpolator = LinearInterpolator()
-        mAnimatorNeedleStart.duration = 700
-        mAnimatorNeedleStart.interpolator = LinearInterpolator()
-    // Object target:目标对象，
-    // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
-    // float... values:一系列这个属性将会到达的值
-    // 设置一次动画的时间
-    // 设置一次动画的时间
-        mAnimator.duration = 19000
-    // 设置插值器，用来控制变化率
-    // 设置插值器，用来控制变化率
-        mAnimator.interpolator = LinearInterpolator()
-    // 设置重复的次数，无限
-        mAnimator.repeatCount = ObjectAnimator.INFINITE
+
         mAnimator.start()
 
         //当音频文件加载好之后就start
@@ -342,8 +355,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     mediaPlayer.pause()//暂停播放
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
-                        //songDao.updateAlbumUrl(url,albumId)
                         //将isplaying设为false
+                        songDao.unableIsPlaying(false)
                     }
                 }
             }else{
@@ -353,8 +366,14 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 it.background=  getDrawable(R.drawable.ic_pause)
                 if (!mediaPlayer.isPlaying){
                     mediaPlayer.start()//开始播放
+                    thread {
+                        val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
+                        val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+
+                        //将isplaying设为true
+                        //songDao.updateIsPlaying(true)
+                    }
                 }
-                //"播放".showToast(this)
             }
             count++
         }

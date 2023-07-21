@@ -46,6 +46,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
     private lateinit var seekBar: SeekBar
     private lateinit var timer:Timer
+    private var count=0
+
     companion object {
         const val ACTION_SERVICE_NEED: String="action.ServiceNeed"
         const val ACTION_SERVICE_COMPLETE: String="action.ServiceComplete"
@@ -245,6 +247,15 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             Log.e("TAGInternet",it.errMsg)
                             withContext(Dispatchers.Main){
                                 Toast.makeText(this@PlayerActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
+                                handler.sendEmptyMessageDelayed(0, 700)
+                                mAnimatorNeedleStart.pause()
+
+                                mAnimatorNeedlePause.start()
+                                binding.icPlay.background=  getDrawable(R.drawable.ic_play_circle_2)
+                                if (mediaPlayer.isPlaying){
+                                    mediaPlayer.pause()//暂停播放
+                                }
+                                count++
                             }
                         }
                         is APIResponse.Loading-> Log.e("TAG","loading")
@@ -307,7 +318,6 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }
     }
     private fun initListener() {
-        var count=0
         binding.btnBack.setOnClickListener {
             finish()
         }

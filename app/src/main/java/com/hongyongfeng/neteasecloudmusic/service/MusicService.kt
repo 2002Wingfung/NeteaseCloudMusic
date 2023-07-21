@@ -70,12 +70,11 @@ class MusicService : Service() {
                     sendBroadcast(intentBroadcastReceiver);
                 }){
 
+                    //播放完成准备下一首
+                    //监听回调
                 }
-//            }else{
-//                isFirst=false
-//            }
+
         }
-//        refresh(seekBar,mediaPlayer)
         return super.onStartCommand(intent, flags, startId)
     }
 

@@ -261,8 +261,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         is APIResponse.Loading-> Log.e("TAG","loading")
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val url=it.response.data[0].url
-                            //println("Song:$url")
-//                            Player.initMediaPlayer(url, mediaPlayer,seekBar)
+
                             val intent = Intent(this@PlayerActivity, MusicService::class.java)
                             intent.putExtra("url",url)
                             //intent.putExtra("time",it.response.data[0].time)

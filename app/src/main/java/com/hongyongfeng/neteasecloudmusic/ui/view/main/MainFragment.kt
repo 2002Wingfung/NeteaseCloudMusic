@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.findNavController
@@ -71,33 +72,7 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
             recyclerViewEstablish,
             adapterEstablish
         )
-        val nav: NavigationView =binding.navView
-        nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *4/ 5;//屏幕的三分之一
-        nav.setLayoutParams(nav.layoutParams);
-        val headerLayout =nav.inflateHeaderView(R.layout.nav_header)
-        headerLayout.setOnClickListener{
-            findNavController().navigate(R.id.action_mainFragment_to_loginFragment)
-        }
-        nav.setNavigationItemSelectedListener {
-            when(it.itemId){
-                R.id.item1 ->{
-                    Toast.makeText(activity, "我的消息", Toast.LENGTH_SHORT).show();
-                }
-                R.id.item2 -> {
-                    Toast.makeText(activity, "设置", Toast.LENGTH_SHORT).show()
-                }
-                R.id.item3 -> {
-                    Toast.makeText(activity, "深色模式", Toast.LENGTH_SHORT).show()
-                }
-                R.id.item4 ->{
-                    Toast.makeText(activity, "关于", Toast.LENGTH_SHORT).show();
-                }
-                R.id.item5 -> {
-                    Toast.makeText(activity, "退出登录", Toast.LENGTH_SHORT).show()
-                }
-            }
-            false
-        }
+
     }
     override fun initFragment(
         binding: FragmentMainBinding,
@@ -135,8 +110,8 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
             println((view.findViewById(R.id.tv_title) as TextView).text)
         }
         binding.btnNva.setOnClickListener{
-            binding.drawerLayout.openDrawer(GravityCompat.START)
-            println("success")
+            mActivity.findViewById<DrawerLayout>(R.id.drawer_layout).openDrawer(GravityCompat.START)
+            //println("success")
         }
         binding.layoutLikes.setOnClickListener {
             findNavController().navigate(R.id.action_mainFragment_to_listFragment)

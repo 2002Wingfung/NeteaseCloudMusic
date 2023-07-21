@@ -11,7 +11,13 @@ import android.os.Looper
 import android.os.Message
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
+import androidx.core.view.GravityCompat
 import androidx.lifecycle.ViewModel
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
+import androidx.navigation.fragment.findNavController
+import com.google.android.material.navigation.NavigationView
+import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
@@ -113,6 +119,34 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val nav: NavigationView =binding.navView
+        nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *4/ 5;//屏幕的三分之一
+        nav.setLayoutParams(nav.layoutParams);
+        val headerLayout =nav.inflateHeaderView(R.layout.nav_header)
+        headerLayout.setOnClickListener{
+            findNavController(R.id.app_nav).navigate(R.id.action_mainFragment_to_loginFragment)
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        }
+        nav.setNavigationItemSelectedListener {
+            when(it.itemId){
+                R.id.item1 ->{
+                    Toast.makeText(this, "我的消息", Toast.LENGTH_SHORT).show();
+                }
+                R.id.item2 -> {
+                    Toast.makeText(this, "设置", Toast.LENGTH_SHORT).show()
+                }
+                R.id.item3 -> {
+                    Toast.makeText(this, "深色模式", Toast.LENGTH_SHORT).show()
+                }
+                R.id.item4 ->{
+                    Toast.makeText(this, "关于", Toast.LENGTH_SHORT).show();
+                }
+                R.id.item5 -> {
+                    Toast.makeText(this, "退出登录", Toast.LENGTH_SHORT).show()
+                }
+            }
+            false
+        }
         binding.layBottom.setOnClickListener {
             //"底部".showToast(this)
             val intent=Intent(this, PlayerActivity::class.java)

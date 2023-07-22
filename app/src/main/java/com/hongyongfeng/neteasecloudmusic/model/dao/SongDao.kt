@@ -21,8 +21,8 @@ interface SongDao {
     @Query("select * from Song where isPlaying==1")
     fun loadIsPlayingSong():Song?
 
-    @Query("update song set isPlaying = :isPlaying where isPlaying==1")
-    fun unableIsPlaying(isPlaying:Boolean)
+    @Query("update song set isPlaying = :newStatus where lastPlaying== :lastPlay")
+    fun updateIsPlaying(newStatus:Boolean, lastPlay:Boolean)
 
     @Query("select * from Song where lastPlaying==1")
     fun loadLastPlayingSong():Song?

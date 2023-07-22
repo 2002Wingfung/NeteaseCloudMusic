@@ -111,7 +111,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
     }
-    fun initAnimation(){
+    private fun initAnimation(){
         // Object target:目标对象，
         // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
         // float... values:一系列这个属性将会到达的值
@@ -202,13 +202,28 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         songsRequest(songId)
                     }
                 }else{
-                    count++
-                    handler.sendEmptyMessageDelayed(0, 700)
-                    mAnimatorNeedleStart.pause()
+                    val songDao=AppDatabase.getDatabase(this).songDao()
+                    thread {
+                        val song=songDao.loadIsPlayingSong()
+                        if(song==null){
+                            count++
+                            runOnUiThread{
+                                handler.sendEmptyMessageDelayed(0, 700)
 
-                    mAnimatorNeedlePause.start()
-                    //"暂停".showToast(this)
-                    binding.icPlay.background=  getDrawable(R.drawable.ic_play_circle_2)
+                                val duration=mediaPlayer.duration
+                                seekBar.max= duration
+
+                                binding.tvTotal.text=time(duration)
+                                seekBar.progress = mediaPlayer.currentPosition
+
+                                mAnimatorNeedleStart.pause()
+
+                                mAnimatorNeedlePause.start()
+                                //"暂停".showToast(this)
+                                binding.icPlay.background=  getDrawable(R.drawable.ic_play_circle_2)
+                            }
+                        }
+                    }
                 }
 
             }
@@ -356,7 +371,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                         //将isplaying设为false
-                        songDao.unableIsPlaying(false)
+                        songDao.updateIsPlaying(false, lastPlay = true)
                     }
                 }
             }else{
@@ -368,10 +383,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     mediaPlayer.start()//开始播放
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
-                        val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
-
+                        //val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+                        songDao.updateIsPlaying(true, lastPlay = true)
                         //将isplaying设为true
-                        //songDao.updateIsPlaying(true)
                     }
                 }
             }

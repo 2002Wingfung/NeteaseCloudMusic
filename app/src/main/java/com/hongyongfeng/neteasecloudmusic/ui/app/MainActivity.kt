@@ -111,7 +111,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
      */
     private fun initAnimation() {
         logoAnimation = ObjectAnimator.ofFloat(binding.ivLogo, "rotation", 0.0f, 360.0f)
-        logoAnimation.setDuration(3000)
+        logoAnimation.duration = 6000
         logoAnimation.interpolator = LinearInterpolator()
         logoAnimation.repeatCount = -1
         logoAnimation.repeatMode = ObjectAnimator.RESTART

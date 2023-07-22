@@ -1,6 +1,9 @@
 package com.hongyongfeng.neteasecloudmusic.ui.view.main
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,24 +22,30 @@ import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.adapter.PlayListAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentMainBinding
+import com.hongyongfeng.neteasecloudmusic.model.PlayList
 import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
+import com.hongyongfeng.neteasecloudmusic.network.APIResponse
+import com.hongyongfeng.neteasecloudmusic.network.api.PlayListInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
 import com.hongyongfeng.neteasecloudmusic.ui.view.player.PlayerFragment
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
     FragmentMainBinding::inflate,
     null,
     true
 ){
+    private lateinit var publicViewModel: PublicViewModel
     private lateinit var mActivity:FragmentActivity
     private lateinit var binding:FragmentMainBinding
     private lateinit var recyclerViewCollect:RecyclerView
     private lateinit var recyclerViewEstablish:RecyclerView
-    private var listCollect= mutableListOf<PlayListBean>()
-    private var listEstablish= mutableListOf<PlayListBean>()
+    private var listCollect= mutableListOf<PlayList>()
+    private var listEstablish= mutableListOf<PlayList>()
     private var adapterCollect=PlayListAdapter(listCollect)
     private var adapterEstablish=PlayListAdapter(listEstablish)
     override fun onCreateView(
@@ -50,18 +59,44 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
     override fun initListener() {
         //TODO("Not yet implemented")
     }
+    @SuppressLint("NotifyDataSetChanged")
+    fun initPlayList(){
+        publicViewModel!!.apply {
+            getAPI(PlayListInterface::class.java).getPlayList("1738181262","50","0").getResponse {
+                    flow ->
+                flow.collect(){
+                    when(it){
+                        is APIResponse.Error-> {
+                            Log.e("TAG",it.errMsg)
+                            withContext(Dispatchers.Main){
+                                Toast.makeText(mActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        is APIResponse.Loading-> Log.e("TAG","loading")
+                        is APIResponse.Success-> withContext(Dispatchers.Main){
+                            val playList=it.response.playlist
+                            val prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
 
+                            val userId=prefs.getLong("userId",1738181262)
+                            playList.forEach{
+                                    list->
+                                if (list.userId!=userId){
+                                    listCollect.add(list)
+                                    adapterCollect.notifyItemChanged(0)
+                                }else{
+                                    listEstablish.add(list)
+                                    adapterEstablish.notifyItemChanged(0)
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (listCollect.size==0){
-            listCollect.add(PlayListBean("123",4))
-        }
-        if (listEstablish.size==0){
-            listEstablish.add(PlayListBean("456",7))
-        }
-
-        //adapterEstablish.notifyDataSetChanged()
-        //adapterCollect.notifyDataSetChanged()
         SetRecyclerView.setRecyclerViewScroll(
             mActivity,
             recyclerViewCollect,
@@ -72,7 +107,9 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
             recyclerViewEstablish,
             adapterEstablish
         )
-
+        if (listCollect.isEmpty()&&listEstablish.isEmpty()){
+            initPlayList()
+        }
     }
     override fun initFragment(
         binding: FragmentMainBinding,
@@ -84,6 +121,9 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         this.binding=binding
         initView(binding, StatusBarUtils.getStatusBarHeight(activity as AppCompatActivity)+10)
         initListener(binding)
+        if (publicViewModel != null) {
+            this.publicViewModel=publicViewModel
+        }
     }
     private fun initView(binding: FragmentMainBinding,dp:Int){
         val lp = binding.actionBar.layoutParams as LinearLayout.LayoutParams

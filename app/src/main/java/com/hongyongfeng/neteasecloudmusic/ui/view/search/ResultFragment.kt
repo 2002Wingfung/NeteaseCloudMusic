@@ -65,7 +65,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     }
 
     private fun searchRequest(string: String,page:Int) {
-        viewModel!!.apply {
+        viewModel.apply {
             getAPI(SearchInterface::class.java).getSearchData(string,30,(page)*30).getResponse {
                     flow ->
                 flow.collect(){

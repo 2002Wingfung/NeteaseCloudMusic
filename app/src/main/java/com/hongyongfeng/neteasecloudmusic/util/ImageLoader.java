@@ -48,7 +48,7 @@ public class ImageLoader {
     /**
      * 或者是ProjectItem中的ImageView
      */
-    private static final int TAG_KEY_URI = R.id.iv_recycle_project_item;
+    private static final int TAG_KEY_URI = R.id.img_album;
     private static final long DISK_CACHE_SIZE = 1024 * 1024 * 50;
     private static final int IO_BUFFER_SIZE = 8 * 1024;
     private static final int DISK_CACHE_INDEX = 0;

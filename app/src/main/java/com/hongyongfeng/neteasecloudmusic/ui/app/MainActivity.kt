@@ -22,15 +22,20 @@ import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
+import com.hongyongfeng.neteasecloudmusic.network.APIResponse
+import com.hongyongfeng.neteasecloudmusic.network.api.PlayListInterface
+import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
 
 
-class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate) {
+class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate,true) {
     //private lateinit var binding:ActivityMainBinding
 //    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
 //        if (ev.action == MotionEvent.ACTION_DOWN) {
@@ -148,6 +153,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val nav: NavigationView =binding.navView

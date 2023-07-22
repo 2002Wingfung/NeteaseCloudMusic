@@ -7,15 +7,18 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
+import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 
 
 abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
     private val inflate:(inflater:LayoutInflater)->VB,
-    ): AppCompatActivity() {
+    private val publicViewModelTag:Boolean=false
+): AppCompatActivity() {
     lateinit var binding: VB
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {
@@ -27,6 +30,13 @@ abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
         return super.dispatchTouchEvent(ev)
     }
 
+    val publicViewModel: PublicViewModel? by lazy{
+        if (publicViewModelTag){
+            ViewModelProvider(this)[PublicViewModel::class.java]
+        }else{
+            null
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);

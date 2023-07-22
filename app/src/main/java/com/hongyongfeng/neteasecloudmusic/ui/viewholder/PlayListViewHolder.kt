@@ -12,10 +12,11 @@ class PlayListViewHolder (itemView: View, val  onClickListener:(view:View, posit
     RecyclerView.ViewHolder(itemView) {
     var amount:TextView?=null
     var title:TextView?=null
+    var img:ImageView?=null
     init {
         amount=itemView.findViewById(R.id.tv_amount)
         title=itemView.findViewById(R.id.tv_title)
-
+        img=itemView.findViewById(R.id.img_album)
         itemView.setOnClickListener { view: View ->
             val position = adapterPosition
             //确保position值有效

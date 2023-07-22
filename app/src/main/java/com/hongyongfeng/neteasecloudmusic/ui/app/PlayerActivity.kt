@@ -35,11 +35,9 @@ import kotlin.math.roundToInt
 
 
 public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
-    ActivityPlayerBinding::inflate
+    ActivityPlayerBinding::inflate,true
 ){
-    private val publicViewModel: PublicViewModel? by lazy{
-        ViewModelProvider(this)[PublicViewModel::class.java]
-    }
+
     private lateinit var imageLoader: ImageLoader
 
     private var albumId: Int=0
@@ -51,6 +49,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private var count=0
 
     companion object {
+        const val ACTION_SERVICE_PERCENT: String="action.percent"
         const val ACTION_SERVICE_NEED: String="action.ServiceNeed"
         const val ACTION_SERVICE_COMPLETE: String="action.ServiceComplete"
     }
@@ -70,18 +69,20 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }
 
     }
-    internal inner class ServiceBroadcastReceiver: BroadcastReceiver() {
+    internal inner class PercentReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val percent=intent?.getIntExtra("percent",-1)
             val duration= mediaPlayer.duration
-            if (percent==-1){
-                seekBar.max=duration
-                refresh(seekBar, mediaPlayer)
-            }else{
-                seekBar.max=mediaPlayer.duration
-                seekBar.secondaryProgress = percent!!*duration/100
-                //binding.tvTotal.text=time(duration)
-            }
+            seekBar.max=duration
+            seekBar.secondaryProgress = percent!!*duration/100
+        }
+    }
+    internal inner class ServiceBroadcastReceiver: BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val duration= mediaPlayer.duration
+            seekBar.max=duration
+            refresh(seekBar, mediaPlayer)
+
         }
     }
     private fun time(time:Int):String{
@@ -89,6 +90,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val s=(time-min*60*1000)/1000f.roundToInt()
 
         return if (min==1&&s==10){
+            "0$min:$s"
+        }else if(min==0&&s==10){
             "0$min:$s"
         }else if(min<10&&s<10){
             "0$min:0$s"
@@ -214,8 +217,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                                 seekBar.max= duration
 
                                 binding.tvTotal.text=time(duration)
-                                seekBar.progress = mediaPlayer.currentPosition
+                                //seekBar.progress = mediaPlayer.currentPosition
 
+                                refresh(seekBar, mediaPlayer)
                                 mAnimatorNeedleStart.pause()
 
                                 mAnimatorNeedlePause.start()
@@ -246,14 +250,17 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         register()
     }
     private fun register(){
+        val filterPercent = IntentFilter()
+        filterPercent.addAction(ACTION_SERVICE_PERCENT)
+
+        registerReceiver(PercentReceiver(), filterPercent);
+        val filterComplete = IntentFilter()
+        filterComplete.addAction(ACTION_SERVICE_COMPLETE)
+        registerReceiver(CompleteReceiver(), filterComplete);
         val filter = IntentFilter()
         filter.addAction(ACTION_SERVICE_NEED)
 
         registerReceiver(ServiceBroadcastReceiver(), filter);
-        val filterComplete = IntentFilter()
-        filterComplete.addAction(ACTION_SERVICE_COMPLETE)
-        registerReceiver(CompleteReceiver(), filterComplete);
-
     }
     private fun initView(binding: ActivityPlayerBinding, dp:Int){
         val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
@@ -329,15 +336,12 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         is APIResponse.Loading-> Log.e("TAG","loading")
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val url=it.response.songs[0].al.picUrl
-                            //println("picUrl:$url")
-
                             //Picasso.get().load(url).resize(512,512).into(binding.imgAlbum)
                             Picasso.get().load(url).fit().into(binding.imgAlbum)
                             thread {
                                 val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                                 songDao.updateAlbumUrl(url,albumId)
                             }
-
 //                            imageLoader.bindBitmap(
 //                                url,
 //                                binding.imgAlbum,
@@ -442,6 +446,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     override fun onDestroy() {
         super.onDestroy()
         Log.e("MyPlayerActivity","onDestroy")
+        if (::timer.isInitialized){
+            timer.cancel()
+        }
 //        mediaPlayer.stop()
 //        mediaPlayer.release()
     }

@@ -72,7 +72,7 @@ class MusicService : Service() {
                 sendBroadcast(intentBroadcastReceiver);
             }, {
                 val intentBroadcastReceiver = Intent();
-                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_PERCENT;
                 intentBroadcastReceiver.putExtra("percent", it)
                 sendBroadcast(intentBroadcastReceiver);
             }) {

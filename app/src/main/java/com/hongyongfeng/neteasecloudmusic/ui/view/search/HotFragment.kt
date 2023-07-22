@@ -14,9 +14,11 @@ import androidx.fragment.app.FragmentActivity
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentHotBinding
+import com.hongyongfeng.neteasecloudmusic.model.dao.HotDao
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
-import com.hongyongfeng.neteasecloudmusic.model.Hot
+import com.hongyongfeng.neteasecloudmusic.model.entity.Hot
+import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.ui.widget.FlowLayout
 import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
@@ -29,7 +31,10 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     HotViewModel::class.java,
     true
 ){
+    private lateinit var hotDao:HotDao
+
     private lateinit var flowLayout: FlowLayout
+    private lateinit var flowLayoutHistory: FlowLayout
     private lateinit var binding: FragmentHotBinding
     private lateinit var mActivity: FragmentActivity
     private lateinit var publicViewModel: PublicViewModel
@@ -45,9 +50,15 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
         if (viewModel != null) {
             this.viewModel=viewModel
         }
-        flowLayout = binding.layoutFlow.findViewById(R.id.flowlayout)
+        flowLayout = binding.flowlayout
         flowLayout.setSpace(DisplayUtils.dp2px(15F), DisplayUtils.dp2px(15F))
         flowLayout.setPadding(
+            DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F),
+            DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F)
+        )
+        flowLayoutHistory = binding.flowLayoutHistory
+        flowLayoutHistory.setSpace(DisplayUtils.dp2px(15F), DisplayUtils.dp2px(15F))
+        flowLayoutHistory.setPadding(
             DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F),
             DisplayUtils.dp2px(5F), DisplayUtils.dp2px(5F)
         )
@@ -63,12 +74,13 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
+        hotDao= AppDatabase.getDatabase(mActivity).hotDao()
         if (hotList.isEmpty()){
             hotWordsRequest()
         }else{
             display(flowLayout, hotList)
         }
-
+        display(flowLayoutHistory,hotDao.loadAllHots())
     }
     private fun hotWordsRequest(){
         publicViewModel!!.apply {
@@ -149,6 +161,9 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
             tv.setOnClickListener { v: View? ->
                 val key = tv.text.toString()
                 viewModel.setText(key)
+                hotDao.deleteHot(key)
+                hotDao.insertHot(Hot(key))
+
             }
             flowLayout.addView(tv)
         }

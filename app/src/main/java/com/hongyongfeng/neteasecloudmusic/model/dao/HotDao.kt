@@ -11,8 +11,6 @@ interface HotDao {
     @Insert
     fun insertHot(hot: Hot):Long
 
-
-
     @Query("select * from Hot order by id desc")
     fun loadAllHots():List<Hot>
 
@@ -21,8 +19,6 @@ interface HotDao {
 
     @Delete
     fun deleteHot(hot: Hot)//注意更新和删除数据时都是基于User的id值去操作的
-
-
 
     @Query("delete from Song where name= :name")
     fun deleteUserByName(name:String):Int

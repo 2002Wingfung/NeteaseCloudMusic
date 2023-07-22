@@ -5,11 +5,7 @@ import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
-import android.os.Message
+import android.os.*
 import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
@@ -22,17 +18,13 @@ import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
-import com.hongyongfeng.neteasecloudmusic.network.APIResponse
-import com.hongyongfeng.neteasecloudmusic.network.api.PlayListInterface
-import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 
 class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate,true) {
@@ -53,9 +45,17 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
     var mBackPressed: Long = 0
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            musicBinder = service as MusicService.MediaPlayerBinder
+            musicService = musicBinder!!.getMusicService()
+            Log.d("Binder", "Service与Activity已连接")
         }
-        override fun onServiceDisconnected(name: ComponentName) {}
+        override fun onServiceDisconnected(name: ComponentName) {
+            musicBinder=null
+        }
     }
+    private var musicBinder:MusicService.MediaPlayerBinder?=null
+    private var musicService: MusicService? = null
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         supportFragmentManager.fragments[0].apply {
             if (this.childFragmentManager.fragments[0] is MainFragment){
@@ -250,7 +250,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 //            false
 //        }
 
-        val intent = Intent(this@MainActivity, MusicService::class.java)
+        val intent = Intent(this, MusicService::class.java)
 
 
         bindService(intent,mServiceConnection,BIND_AUTO_CREATE)
@@ -282,6 +282,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         stopService(intent)
 
         unbindService(mServiceConnection)
+        exitProcess(0);
     }
 
     fun onClick(view: View) {

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:background="#DDDDDD"
+        android:orientation="horizontal">
+        <!--专辑封面图-->
+        <ImageView
+            android:id="@+id/iv_album_cover"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_cloud_music" />
+
+        <LinearLayout
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="6dp"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="64dp">
+
+            <!--歌曲信息-->
+            <LinearLayout
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_notification_song_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:singleLine="true"
+                    android:text="歌曲名"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_marginStart="12dp"
+                    android:id="@+id/tv_notification_singer"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:singleLine="true"
+                    android:layout_height="wrap_content"
+                    android:text="歌手名"
+                    android:textSize="12dp" />
+
+                <ImageButton
+                    android:id="@+id/btn_notification_close"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@color/transparent"
+                    android:scaleType="fitCenter"
+
+                    android:src="@drawable/close_gray" />
+            </LinearLayout>
+            <!--歌曲控制-->
+            <LinearLayout
+                android:layout_marginTop="4dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
+                <!--上一曲-->
+                <ImageButton
+                    android:id="@+id/btn_notification_previous"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_back_song"
+                    />
+                <!--播放/暂停-->
+                <ImageButton
+                    android:id="@+id/btn_notification_play"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginEnd="30dp"
+                    android:background="@null"
+                    android:scaleType="fitCenter"
+
+                    android:src="@drawable/ic_play_circle_2" />
+                <!--下一曲-->
+                <ImageButton
+                    android:id="@+id/btn_notification_next"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@null"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_next" />
+
+
+            </LinearLayout>
+        </LinearLayout>
+
+
+
+
+    </LinearLayout>
+</RelativeLayout>

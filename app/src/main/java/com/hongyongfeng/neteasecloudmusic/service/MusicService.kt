@@ -5,10 +5,13 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.IBinder
+import androidx.lifecycle.lifecycleScope
+
 import android.util.Log
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.player.utli.Player
+import kotlinx.coroutines.*
 import kotlin.concurrent.thread
 
 class MusicService : Service() {
@@ -86,19 +89,24 @@ class MusicService : Service() {
 //        return this.mediaPlayers
 //    }
     override fun onDestroy() {
+
+        runBlocking {
+            launch {
+                Log.e("MusicService","onDestroy")
+
+                val songDao= AppDatabase.getDatabase(this@MusicService).songDao()
+                songDao.updateIsPlaying(false, lastPlay = true)
+                for (song in songDao.loadAllSongs()){
+                    Log.e("MainActivity",song.toString()+"id:${song.id}")
+                }
+            }
+        }
         super.onDestroy()
+
         mediaPlayer.stop()
         mediaPlayer.release()
-        thread {
-            val songDao= AppDatabase.getDatabase(this).songDao()
-            songDao.updateIsPlaying(false, lastPlay = true)
-            for (song in songDao.loadAllSongs()){
-                Log.e("MainActivity",song.toString()+"id:${song.id}")
-            }
-            Log.e("MusicService","onDestroy")
 
-            //设置一个lastplaying
-        }
+
         //将数据库表中的isPlaying字段设为false
         //开设一个字段lastSong
         //将最后一首播放的歌曲的lastSong设为true，用于底部播放器和通知栏播放器的显示

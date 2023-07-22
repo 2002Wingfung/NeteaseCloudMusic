@@ -96,16 +96,16 @@ class MusicService : Service() {
 
                 val songDao= AppDatabase.getDatabase(this@MusicService).songDao()
                 songDao.updateIsPlaying(false, lastPlay = true)
-                for (song in songDao.loadAllSongs()){
-                    Log.e("MainActivity",song.toString()+"id:${song.id}")
-                }
+//                for (song in songDao.loadAllSongs()){
+//                    Log.e("MainActivity",song.toString()+"id:${song.id}")
+//                }
+            }
+            launch {
+                mediaPlayer.stop()
+                mediaPlayer.release()
             }
         }
         super.onDestroy()
-
-        mediaPlayer.stop()
-        mediaPlayer.release()
-
 
         //将数据库表中的isPlaying字段设为false
         //开设一个字段lastSong

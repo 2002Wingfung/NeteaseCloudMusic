@@ -16,8 +16,11 @@ import android.util.Log
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.gsls.gt.GT
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
+import com.hongyongfeng.neteasecloudmusic.receiver.NotificationClickReceiver
+import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.player.utli.Player
 import kotlinx.coroutines.*
@@ -90,7 +93,30 @@ class MusicService : Service() {
         //注册动态广播
         registerMusicReceiver();
         showNotification()
+        //showGtNotification()
     }
+
+    private fun showGtNotification() {
+        //创建进自定义知栏
+        //创建进自定义知栏
+        val builder = GT.GT_Notification.createNotificationFoldView(
+            this,
+            com.gsls.gt.R.mipmap.ic_launcher_round, //通知栏图标
+            R.layout.notification,  //折叠布局
+            R.layout.item_notification2,  //展开布局
+            true,  //单击是否取消通知
+            true,  //是锁屏显示
+            Intent(this, MainActivity::class.java),  //单击意图
+            -1,  //发送通知时间
+            222 //通知Id
+        )
+
+        //启动最终的通知栏
+
+        //启动最终的通知栏
+        GT.GT_Notification.startNotification(builder, 222)
+    }
+
     override fun onBind(intent: Intent?): IBinder? {
         //TODO("Not yet implemented")
 //        isFirst=true
@@ -179,7 +205,7 @@ class MusicService : Service() {
      */
     @SuppressLint("UnspecifiedImmutableFlag")
     private fun initRemoteViews() {
-        remoteViews = RemoteViews(this.packageName, R.layout.notification)
+        remoteViews = RemoteViews(this.packageName, R.layout.item_notification)
 
         //通知栏控制器上一首按钮广播操作
         val intentPrev = Intent(PREV)
@@ -228,21 +254,36 @@ class MusicService : Service() {
         }
         //为close控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_close, closePendingIntent)
+
     }
     /**
      * 显示通知
      */
+    @SuppressLint("UnspecifiedImmutableFlag")
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showNotification() {
         val channelId = "play_control"
         val channelName = "播放控制"
-        val importance = NotificationManager.IMPORTANCE_HIGH
+        val importance = NotificationManager.IMPORTANCE_MAX
         createNotificationChannel(channelId, channelName, importance)
         //val remoteViews = RemoteViews(this.packageName, R.layout.notification)
+        //点击整个通知时发送广播
+        //点击整个通知时发送广播
+        val intent = Intent(applicationContext, NotificationClickReceiver::class.java)
+        val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            //设置延迟意图
+            PendingIntent.getBroadcast(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+        } else {
+            PendingIntent.getBroadcast(applicationContext, 0, intent,  PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+
         val notification: Notification = NotificationCompat.Builder(this, "play_control")
             .setWhen(System.currentTimeMillis())
+            .setContentIntent(pendingIntent)
             .setSmallIcon(R.drawable.ic_notification)
             .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.ic_notification))
+            .setCustomContentView(remoteViews)
             .setCustomBigContentView(remoteViews)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setAutoCancel(false)

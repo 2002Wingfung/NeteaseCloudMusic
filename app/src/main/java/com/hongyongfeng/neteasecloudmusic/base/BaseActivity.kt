@@ -1,14 +1,17 @@
 package com.hongyongfeng.neteasecloudmusic.base
 
 import android.app.Activity
+import android.app.Application.ActivityLifecycleCallbacks
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.*
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
+import com.hongyongfeng.neteasecloudmusic.ActivityManager
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.util.KeyboardUtils
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
@@ -37,6 +40,7 @@ abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
             null
         }
     }
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -53,6 +57,19 @@ abstract class BaseActivity<VB: ViewBinding,VM: ViewModel>(
         //window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.getDecorView()
             .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+            override fun onActivityStarted(activity: Activity) {}
+            override fun onActivityResumed(activity: Activity) {
+                //设置当前位于栈顶的Activity
+                ActivityManager.setCurrentActivity(activity)
+            }
+
+            override fun onActivityPaused(activity: Activity) {}
+            override fun onActivityStopped(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
     }
     private fun fullTrans(activity: Activity) {
         val window: Window = activity.window

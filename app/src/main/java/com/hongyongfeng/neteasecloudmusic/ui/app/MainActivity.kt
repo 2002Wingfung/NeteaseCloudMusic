@@ -1,15 +1,18 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
+import android.Manifest
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.*
 import android.util.Log
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.view.GravityCompat
 import androidx.lifecycle.ViewModel
 import androidx.navigation.findNavController
@@ -18,10 +21,12 @@ import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
+import com.hongyongfeng.neteasecloudmusic.receiver.NotificationClickReceiver
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
 import com.hongyongfeng.neteasecloudmusic.util.showToast
+import com.permissionx.guolindev.PermissionX
 import com.squareup.picasso.Picasso
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
@@ -153,9 +158,31 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 
         }
     }
+    val requestList = ArrayList<String>()
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestList.add(PermissionX.permission.POST_NOTIFICATIONS)
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("com.example.broadcastbestpractice.FORCE_OFFLINE")
+        val receiver = NotificationClickReceiver()
+        registerReceiver(receiver, intentFilter)
+        PermissionX.init(this)
+            .permissions(requestList)
+            .onExplainRequestReason { scope, deniedList ->
+                val message = "PermissionX需要您同意以下权限才能正常使用"
+                scope.showRequestReasonDialog(deniedList, message, "Allow", "Deny")
+            }
+            .request { allGranted, grantedList, deniedList ->
+                if (allGranted) {
+                    Toast.makeText(this, "所有申请的权限都已通过", Toast.LENGTH_SHORT).show()
+                } else {
+                    Log.e("false",deniedList.toString())
+                    Toast.makeText(this, "您拒绝了如下权限：$deniedList", Toast.LENGTH_SHORT).show()
+                }
+            }
+
         val nav: NavigationView =binding.navView
         nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *4/ 5;//屏幕的三分之一
         nav.setLayoutParams(nav.layoutParams);

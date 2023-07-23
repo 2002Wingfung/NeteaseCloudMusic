@@ -18,6 +18,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.gsls.gt.GT
 import com.hongyongfeng.neteasecloudmusic.*
+import com.hongyongfeng.neteasecloudmusic.ActivityManager
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.receiver.NotificationClickReceiver
 import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
@@ -277,7 +278,18 @@ class MusicService : Service() {
         } else {
             PendingIntent.getBroadcast(applicationContext, 0, intent,  PendingIntent.FLAG_UPDATE_CURRENT)
         }
+        val currentActivity: Activity = ActivityManager.getCurrentActivity()!!
+        val intent1 = Intent(Intent.ACTION_MAIN)
+        intent1.addCategory(Intent.CATEGORY_LAUNCHER)
+        intent1.setClass(this, currentActivity.javaClass)
+        intent1.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+        val pi = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            //设置延迟意图
+            PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
+        } else {
+            PendingIntent.getActivity(this, 0, intent1,  PendingIntent.FLAG_UPDATE_CURRENT)
+        }
         val notification: Notification = NotificationCompat.Builder(this, "play_control")
             .setWhen(System.currentTimeMillis())
             .setContentIntent(pendingIntent)
@@ -289,7 +301,9 @@ class MusicService : Service() {
             .setAutoCancel(false)
             .setOnlyAlertOnce(true)
             .setOngoing(true)
+            //.setContentIntent(pi)
             .build()
+
         //发送通知
         manager!!.notify(1, notification)
     }

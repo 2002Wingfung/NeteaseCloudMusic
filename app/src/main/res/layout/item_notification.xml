@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#DBDBDB"
+    android:background="@color/transparent"
     android:orientation="vertical">
 
     <LinearLayout
@@ -17,6 +17,7 @@
             android:layout_height="50dp"
             android:layout_gravity="center"
             android:scaleType="fitXY"
+            android:id="@+id/img_album"
             android:src="@drawable/ic_cloud_music" />
 
         <LinearLayout
@@ -43,6 +44,7 @@
                 android:layout_height="wrap_content"
                 android:text="周杰伦"
                 android:maxLines="1"
+                android:id="@+id/tv_singer"
                 android:ellipsize="end"
                 android:textSize="12sp"
                 android:textColor="#000000" />
@@ -60,7 +62,7 @@
                 android:layout_height="26dp"
                 android:background="@null"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_back_song" />
+                android:src="@drawable/ic_back_song_blue" />
 
             <ImageButton
                 android:id="@+id/btn_notification_play"
@@ -69,7 +71,7 @@
                 android:layout_marginStart="10dp"
                 android:background="@null"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_play_circle_2" />
+                android:src="@drawable/ic_play_circle_2_blue" />
 
             <ImageButton
                 android:id="@+id/btn_notification_next"
@@ -78,7 +80,7 @@
                 android:layout_marginStart="10dp"
                 android:background="@null"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_next" />
+                android:src="@drawable/ic_next_blue" />
         </LinearLayout>
 
     </LinearLayout>

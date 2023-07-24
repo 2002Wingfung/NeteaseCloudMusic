@@ -29,7 +29,11 @@ class NotificationClickReceiver : BroadcastReceiver() {
 
         //context.applicationContext.startActivity(intent1)
         //println(context)
-        context.startActivity(intent1)
+        try {
+            context.startActivity(intent1)
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
         Log.d("NotificationClickReceiver","通知栏点击");
 
         //这样就可以实现，点击通知栏时跳转到栈顶的Activity而不是新建一个Activity。

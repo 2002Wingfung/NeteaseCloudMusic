@@ -18,6 +18,8 @@ interface SongDao {
     @Query("select * from Song ")
     fun loadAllSongs():List<Song>
 
+    @Query("select id from Song where lastPlaying=1")
+    fun loadId():Int
     @Query("select * from Song where isPlaying==1")
     fun loadIsPlayingSong():Song?
 

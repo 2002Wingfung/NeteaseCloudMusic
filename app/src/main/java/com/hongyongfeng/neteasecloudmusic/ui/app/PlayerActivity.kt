@@ -9,6 +9,7 @@ import android.view.animation.LinearInterpolator
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.edit
@@ -140,6 +141,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         // 设置重复的次数，无限
         mAnimator.repeatCount = ObjectAnimator.INFINITE
     }
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         imageLoader= ImageLoader.build(this)

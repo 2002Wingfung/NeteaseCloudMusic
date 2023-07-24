@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
@@ -18,8 +19,6 @@ import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import com.gsls.gt.GT
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.ActivityManager
@@ -28,16 +27,16 @@ import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.RequestBuilder
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
-import com.hongyongfeng.neteasecloudmusic.receiver.NotificationClickReceiver
 import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
-import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.player.utli.Player
 import com.squareup.picasso.Picasso
+import com.squareup.picasso.Picasso.LoadedFrom
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Call
 import java.io.IOException
+import java.lang.Exception
 import kotlin.concurrent.thread
 
 
@@ -374,32 +373,62 @@ class MusicService : Service() {
      * @param position 歌曲位置
      */
     private fun updateNotificationShow(position: Int) {
+        //manager!!.cancel(NOTIFICATION_ID)
         //播放状态判断
         if (mediaPlayer.isPlaying) {
             remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_pause_blue)
         } else {
             remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_play_circle_2_blue)
         }
+        //歌曲名
+        remoteViews!!.setTextViewText(R.id.Notification2Activity_music_name, mList[position].name)
+        //歌手名
+        remoteViews!!.setTextViewText(R.id.tv_singer, mList[position].artist)
+
+        //发送通知
+        //manager!!.notify(NOTIFICATION_ID, notification)
         var bitmap:Bitmap?=null
         try {
-            thread {
-                bitmap=Picasso.get().load(mList[position].albumUrl).get()
-                //封面专辑
-                remoteViews!!.setImageViewBitmap(
-                    R.id.img_album,
-                    bitmap)
-            }
+            Picasso.get()
+                .load(mList[position].albumUrl)
+                .resize(128,128)
+                .into(object : com.squareup.picasso.Target {
+                    override fun onBitmapLoaded(bitmap: Bitmap?, from: LoadedFrom?) {
+                        /* Save the bitmap or do something with it here */
+
+                        //Set it in the ImageView
+                        remoteViews!!.setImageViewBitmap(R.id.img_album, bitmap)
+
+                        manager!!.notify(NOTIFICATION_ID, notification)
+
+                    }
+
+                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                        //TODO("Not yet implemented")
+                    }
+
+                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                        //TODO("Not yet implemented")
+                    }
+                })
+
+//            notification?.let {
+//                Picasso.get().load(mList[position].albumUrl).into(remoteViews!!,R.id.img_album,NOTIFICATION_ID,
+//                    it
+//                )
+//            }
+            //manager!!.notify(NOTIFICATION_ID, notification)
+
+            //封面专辑
+//                remoteViews!!.setImageViewBitmap(
+//                    R.id.img_album,
+//                    bitmap)
 
         }catch (e:IOException){
             e.printStackTrace()
         }
 
-        //歌曲名
-        remoteViews!!.setTextViewText(R.id.Notification2Activity_music_name, mList[position].name)
-        //歌手名
-        remoteViews!!.setTextViewText(R.id.tv_singer, mList[position].artist)
-        //发送通知
-        manager!!.notify(NOTIFICATION_ID, notification)
+
     }
     /**
      * 创建通知渠道
@@ -423,7 +452,7 @@ class MusicService : Service() {
     private val songDao= AppDatabase.getDatabase(this@MusicService).songDao()
 
     private val requestBuilder= RequestBuilder()
-    fun <T>getAPI(apiType:Class<T>):T= requestBuilder.getAPI(apiType)
+    private fun <T>getAPI(apiType:Class<T>):T= requestBuilder.getAPI(apiType)
 
     @OptIn(DelicateCoroutinesApi::class)
     fun <T> Call<T>.getResponse(process: suspend (flow: Flow<APIResponse<T>>)->Unit){
@@ -487,8 +516,6 @@ class MusicService : Service() {
                             //设置播放音频的资源路径
                             mediaPlayer.setDataSource(url)
                             mediaPlayer.prepareAsync()
-//                            mediaPlayer.start()
-
                             //显示通知
                             updateNotificationShow(position)
                         }

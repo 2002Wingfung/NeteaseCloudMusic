@@ -462,14 +462,13 @@ class MusicService : Service() {
                 this@getResponse.execute()//this特指getResponse的调用者而不是协程作用域
             })
         }
-
-
-
     }
     /**
      * 播放
      */
     fun play(position: Int) {
+
+
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
             //监听音乐播放完毕事件，自动下一曲
@@ -483,7 +482,6 @@ class MusicService : Service() {
             mediaPlayer.setOnPreparedListener {
                 mediaPlayer.start()
                 remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_pause_blue)
-
             }
         }
         //播放时 获取当前歌曲列表是否有歌曲
@@ -491,12 +489,39 @@ class MusicService : Service() {
         if (mList.isEmpty()) {
             return
         }
+
         try {
             //切歌前先重置，释放掉之前的资源
             mediaPlayer.reset()
             playPosition = position
             val songId=mList[position].songId
+            thread {
+                songDao.updateIsPlaying(false, lastPlay = true)
+                songDao.updateLastPlaying(false, origin = true)
+                songDao.updateLastPlayingById(true,position.toLong()+1)
+                songDao.updateIsPlaying(true, lastPlay = true)
+            }
+            getAPI(PlayerInterface::class.java).getAlbum(mList[position].albumId.toString()).getResponse {
+                    flow ->
+                flow.collect(){
+                    when(it){
+                        is APIResponse.Error-> {
+                            Log.e("TAGInternet",it.errMsg)
+                            withContext(Dispatchers.Main){
+                                Toast.makeText(this@MusicService, "网络连接错误", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        is APIResponse.Loading-> Log.e("TAG","loading")
+                        is APIResponse.Success-> withContext(Dispatchers.Main){
+                            val url=it.response.songs[0].al.picUrl
+                            mList[position].albumUrl=url
+                            songDao.updateAlbumUrl(url,mList[position].albumId.toInt())
+                            updateNotificationShow(position)
 
+                        }
+                    }
+                }
+            }
             getAPI(PlayerInterface::class.java).getSong(songId.toString()).getResponse {
                     flow ->
                 flow.collect(){
@@ -560,8 +585,14 @@ class MusicService : Service() {
     fun pauseOrContinueMusic() {
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
+            thread {
+                songDao.updateIsPlaying(false, lastPlay = true)
+            }
         } else {
             mediaPlayer.start()
+            thread {
+                songDao.updateIsPlaying(true, lastPlay = true)
+            }
         }
         //更改通知栏播放状态
         updateNotificationShow(playPosition)

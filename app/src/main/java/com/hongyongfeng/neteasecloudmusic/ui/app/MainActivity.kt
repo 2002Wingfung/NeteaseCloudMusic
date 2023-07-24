@@ -330,10 +330,10 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         }
         counts++
 
-//        thread {
-//            for (song in songDao.loadAllSongs()){
-//                Log.e("MainActivity",song.toString()+"id:${song.id}")
-//            }
-//        }
+        thread {
+            for (song in songDao.loadAllSongs()){
+                Log.e("MainActivity",song.toString()+"id:${song.id}")
+            }
+        }
     }
 }

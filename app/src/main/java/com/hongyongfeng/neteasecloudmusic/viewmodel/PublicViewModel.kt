@@ -28,6 +28,5 @@ class PublicViewModel :ViewModel(){
                 this@getResponse.execute()//this特指getResponse的调用者而不是协程作用域
             })
         }
-
     }
 }

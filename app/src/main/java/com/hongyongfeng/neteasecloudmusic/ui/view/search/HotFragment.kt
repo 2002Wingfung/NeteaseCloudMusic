@@ -32,7 +32,6 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     true
 ){
     private lateinit var hotDao:HotDao
-
     private lateinit var flowLayout: FlowLayout
     private lateinit var flowLayoutHistory: FlowLayout
     private lateinit var binding: FragmentHotBinding

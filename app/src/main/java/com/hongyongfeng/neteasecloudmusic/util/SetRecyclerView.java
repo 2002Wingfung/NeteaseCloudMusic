@@ -26,9 +26,9 @@ public class SetRecyclerView {
         //将LinearLayoutManager实例传入RecycleView的实例中，设置RecycleView的item布局
         recyclerView.setLayoutManager(layoutManager);
         //通过设置ItemDecoration 来装饰Item的效果,设置间隔线
-        DividerItemDecoration mDivider = new
-                DividerItemDecoration(context,DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(mDivider);
+//        DividerItemDecoration mDivider = new
+//                DividerItemDecoration(context,DividerItemDecoration.VERTICAL);
+//        recyclerView.addItemDecoration(mDivider);
         //将adapter传入recyclerView对象中
         recyclerView.setAdapter(adapter);
         //添加默认动画

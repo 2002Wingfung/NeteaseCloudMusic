@@ -10,8 +10,8 @@
     <color name="shallow_gray">#eeeef5</color>
     <color name="blue_gray">#e8f0f0</color>
     <color name="gray">#88ffffff</color>
-    <color name="transparent">#00ffffff</color>
-    <color name="notification">#000000</color>
+    <color name="notification">#FFFFFF</color>
 
+    <color name="transparent">#00ffffff</color>
     <color name="transparent_black">#00000000</color>
 </resources>

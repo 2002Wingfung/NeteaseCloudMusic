@@ -7,25 +7,33 @@ import android.content.*
 import android.media.MediaPlayer
 import android.os.*
 import android.util.Log
+import android.view.View
 import android.view.animation.LinearInterpolator
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.hongyongfeng.neteasecloudmusic.*
+import com.hongyongfeng.neteasecloudmusic.adapter.SongAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
+import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
+import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
 import com.hongyongfeng.neteasecloudmusic.util.ImageLoader
-import com.hongyongfeng.neteasecloudmusic.util.MyApplication
+import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.squareup.picasso.Picasso
@@ -55,6 +63,9 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private var count=0
     private var position :Int?=0
     private lateinit var prefs: SharedPreferences
+    private var listSongs= mutableListOf<Song>()
+    private var adapter= SongAdapter(listSongs)
+    private lateinit var songDao:SongDao
 
     /**
      * 当在Activity中做出播放状态的改变时，通知做出相应改变
@@ -157,6 +168,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         //imageLoader= ImageLoader.build(this)
         initAnimation()
         prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+        songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
         val bundle = intent.extras
         position=bundle?.getInt("position")
         val name=bundle?.getString("name")
@@ -221,7 +233,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         songsRequest(songId)
                     }
                 }else{
-                    val songDao=AppDatabase.getDatabase(this@PlayerActivity).songDao()
                     thread {
                         val song=songDao.loadIsPlayingSong()
                         if(song==null){
@@ -431,7 +442,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             //Picasso.get().load(url).resize(512,512).into(binding.imgAlbum)
                             Picasso.get().load(url).fit().into(binding.imgAlbum)
                             thread {
-                                val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                                 songDao.updateAlbumUrl(url,albumId)
                             }
 //                            imageLoader.bindBitmap(
@@ -462,7 +472,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 if (mediaPlayer.isPlaying){
                     myService.pauseOrContinueMusic()
                     thread {
-                        val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                         //将isPlaying设为false
                         songDao.updateIsPlaying(false, lastPlay = true)
                     }
@@ -476,7 +485,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     //mediaPlayer.start()//开始播放
                     myService.pauseOrContinueMusic()
                     thread {
-                        val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                         //val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
                         songDao.updateIsPlaying(true, lastPlay = true)
                         //将isplaying设为true
@@ -532,8 +540,10 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 count1++
             }
         }
+
         binding.icList.setOnClickListener {
-            "list".showToast(this)
+            listSongs.addAll(songDao.loadAllSongs())
+            showBottomSheetDialog()
         }
         seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -549,6 +559,41 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 MusicService.isChanging=false;
             }
         })
+        adapter.setOnItemClickListener({
+                view,position->
+
+//            val intent= Intent(mActivity, PlayerActivity::class.java)
+//            val bundle=Bundle()
+//            val song=listSongs[position]
+//            bundle.putString("name",song.name)
+//            bundle.putInt("id",song.songId.toInt())
+//            thread {
+//                songDao.updateIsPlaying(false, lastPlay = true)
+//                songDao.updateLastPlaying(false, origin = true)
+//                songDao.updateLastPlayingById(true,song.id)
+//                songDao.updateIsPlaying(true, lastPlay = true)
+//                song.isPlaying=true
+//                //以下使得lastPlaying为true的代码要在service中切歌的时候再写一遍
+//                song.lastPlaying=true
+//                songDao.updateSong(song)
+//            }
+//            bundle.putInt("albumId",song.albumId.toInt())
+//            bundle.putInt("position",position)
+//            bundle.putString("singer",song.artist)
+//            intent.putExtras(bundle)
+//            startActivity(intent)
+        },{
+                view,position->
+            //("删除$position").showToast(mActivity)
+            songDao.deleteSongById(position+1)
+            songDao.updateSongById(position+2)
+            listSongs.removeAt(position)
+            adapter.notifyItemRemoved(position)
+        },{
+                view,position->
+            ("添加$position").showToast(this)
+
+        })
     }
     private fun refresh(seekBar: SeekBar, mediaPlayer:MediaPlayer){
         timer=Timer()
@@ -560,6 +605,54 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 }
             }
         },0,500)
+    }
+    private fun showBottomSheetDialog(){
+        val bottomSheetDialog = BottomSheetDialog(this)
+
+        bottomSheetDialog.setContentView(R.layout.layout_bottom_sheet)
+
+        val clear: TextView? = bottomSheetDialog.findViewById(R.id.tv_back)
+
+        val recyclerView: RecyclerView? = bottomSheetDialog.findViewById(R.id.rv_play_list)
+        SetRecyclerView.setRecyclerView(
+            this,
+            recyclerView,
+            adapter
+        )
+        val upload: LinearLayout? = bottomSheetDialog.findViewById(R.id.uploadLinearLayout)
+
+        val download: LinearLayout? = bottomSheetDialog.findViewById(R.id.download)
+
+        val delete: LinearLayout? = bottomSheetDialog.findViewById(R.id.delete)
+        clear!!.setOnClickListener {
+            //Toast.makeText(applicationContext, "Copy is Clicked ", Toast.LENGTH_LONG).show()
+            bottomSheetDialog.dismiss()
+        }
+//
+//        share!!.setOnClickListener{
+//            Toast.makeText(applicationContext, "Share is Clicked", Toast.LENGTH_LONG).show()
+//            bottomSheetDialog.dismiss()
+//        }
+//
+//        upload!!.setOnClickListener({
+//            Toast.makeText(applicationContext, "Upload is Clicked", Toast.LENGTH_LONG).show()
+//            bottomSheetDialog.dismiss()
+//        }
+//
+//        download!!.setOnClickListener(object : OnClickListener() {
+//            fun onClick(v: View?) {
+//                Toast.makeText(applicationContext, "Download is Clicked", Toast.LENGTH_LONG).show()
+//                bottomSheetDialog.dismiss()
+//            }
+//        })
+//
+//        delete!!.setOnClickListener(object : OnClickListener() {
+//            fun onClick(v: View?) {
+//                Toast.makeText(applicationContext, "Delete is Clicked", Toast.LENGTH_LONG).show()
+//                bottomSheetDialog.dismiss()
+//            }
+//        })
+        bottomSheetDialog.show()
     }
     override fun onDestroy() {
         super.onDestroy()

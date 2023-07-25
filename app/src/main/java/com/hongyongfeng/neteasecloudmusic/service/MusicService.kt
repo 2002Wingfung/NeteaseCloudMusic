@@ -224,26 +224,28 @@ class MusicService : Service() {
         //每次启动服务的时候是更新播放列表的时候
         val url = intent?.getStringExtra("url")
 
-        if (url != null) {
-            //if (!isFirst){
-            Player().initMediaPlayer(url, mediaPlayer, {
-                //在Service服务类中发送广播消息给Activity活动界面
-                val intentBroadcastReceiver = Intent();
-                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-                sendBroadcast(intentBroadcastReceiver);
-                val songDao = AppDatabase.getDatabase(this).songDao()
-                updateNotificationShow(songDao.loadId() - 1)
-            }, {
-                val intentBroadcastReceiver = Intent();
-                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_PERCENT;
-                intentBroadcastReceiver.putExtra("percent", it)
-                sendBroadcast(intentBroadcastReceiver);
-            }) {
-                //播放完成准备下一首
-                //监听回调
-
-            }
-        }
+        val position=intent?.getIntExtra("position",-1)
+//        if (url != null) {
+//            //if (!isFirst){
+//            Player().initMediaPlayer(url, mediaPlayer, {
+//                //在Service服务类中发送广播消息给Activity活动界面
+//                val intentBroadcastReceiver = Intent();
+//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
+//                sendBroadcast(intentBroadcastReceiver);
+//                val songDao = AppDatabase.getDatabase(this).songDao()
+//                updateNotificationShow(songDao.loadId() - 1)
+//            }, {
+//                val intentBroadcastReceiver = Intent();
+//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_PERCENT;
+//                intentBroadcastReceiver.putExtra("percent", it)
+//                sendBroadcast(intentBroadcastReceiver);
+//            }) {
+//                //播放完成准备下一首
+//                //监听回调
+//
+//            }
+//        }
+        play(position!!,0)
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -546,10 +548,13 @@ class MusicService : Service() {
             //监听音乐播放完毕事件，自动下一曲
             mediaPlayer.setOnCompletionListener {
                 nextMusic()
+                Log.d("MediaPlayer","播放已完成,准备播放下一首")
+
             }
         } else {
             mediaPlayer.setOnCompletionListener {
                 nextMusic()
+                Log.d("MediaPlayer","播放已完成,准备播放下一首")
             }
             mediaPlayer.setOnPreparedListener {
                 mediaPlayer.start()
@@ -559,13 +564,17 @@ class MusicService : Service() {
                 )
                 manager?.notify(NOTIFICATION_ID,notification)
             }
+            mediaPlayer.setOnErrorListener { mp, what, extra ->
+                //mediaPlayer.reset()
+                println("错误")
+                true
+            }
         }
         //播放时 获取当前歌曲列表是否有歌曲
         mList = songDao.loadAllSongs()
         if (mList.isEmpty()) {
             return
         }
-
         try {
             //切歌前先重置，释放掉之前的资源
             mediaPlayer.reset()

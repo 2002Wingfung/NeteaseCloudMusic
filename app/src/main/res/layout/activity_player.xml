@@ -306,7 +306,7 @@
                 android:layout_width="25dp"
                 android:layout_height="25dp"
                 android:layout_marginStart="18dp"
-                android:background="@drawable/ic_repeat"
+                android:background="@drawable/ic_order"
                 android:backgroundTint="@color/white"
                 android:id="@+id/ic_mode"
                 android:layout_gravity="center"

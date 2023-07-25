@@ -1,6 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
 import LiveDataBus
+import LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
 import android.content.*
 import android.media.MediaPlayer
@@ -14,10 +15,8 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.edit
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.hongyongfeng.neteasecloudmusic.R
+import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
@@ -28,7 +27,6 @@ import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPl
 import com.hongyongfeng.neteasecloudmusic.util.ImageLoader
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
-import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.fragment_player.*
 import kotlinx.coroutines.Dispatchers
@@ -38,10 +36,15 @@ import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 
-public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
+class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     ActivityPlayerBinding::inflate,true
 ){
     private lateinit var imageLoader: ImageLoader
+
+    /**
+     * 当Service中通知栏有变化时接收到消息
+     */
+    private var activityLiveData: BusMutableLiveData<String>? = null
     private var albumId: Int=0
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
@@ -49,6 +52,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var seekBar: SeekBar
     private lateinit var timer:Timer
     private var count=0
+    private var position :Int?=0
+
     /**
      * 当在Activity中做出播放状态的改变时，通知做出相应改变
      */
@@ -78,16 +83,15 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         override fun onReceive(context: Context?, intent: Intent?) {
             val percent=intent?.getIntExtra("percent",-1)
             val duration= mediaPlayer.duration
-            seekBar.max=duration
-            seekBar.secondaryProgress = percent!!*duration/100
+//            seekBar.max=duration
+//            seekBar.secondaryProgress = percent!!*duration/100
         }
     }
     internal inner class ServiceBroadcastReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val duration= mediaPlayer.duration
-            seekBar.max=duration
-            refresh(seekBar, mediaPlayer)
-
+//            seekBar.max=duration
+//            refresh(seekBar, mediaPlayer)
         }
     }
     private fun time(time:Int):String{
@@ -152,7 +156,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         initAnimation()
 
         val bundle = intent.extras
-
+        position=bundle?.getInt("position")
         val name=bundle?.getString("name")
         binding.tvTitle.text=name
         val albumIdResult=bundle?.getInt("albumId")
@@ -165,6 +169,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             intent1, mServiceConnection,
             BIND_AUTO_CREATE
         )
+
         val songId=bundle?.getInt("id")
         val singer=bundle?.getString("singer")
 
@@ -258,7 +263,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         //当音频文件加载好之后就start
 
     // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
-
+        notificationObserver()
         register()
     }
     private fun register(){
@@ -284,6 +289,51 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             refresh(seekBar, mediaPlayer)
         }
         notificationLiveData=LiveDataBus.instance.with("notification_control",String::class.java)
+    }
+    /**
+     * 通知栏动作观察者
+     */
+    private fun notificationObserver() {
+        val songDao = AppDatabase.getDatabase(this).songDao()
+        activityLiveData = LiveDataBus.instance.with("activity_control", String::class.java)
+        activityLiveData!!.observe(
+            this@PlayerActivity, true
+        ) { value ->
+            when (value) {
+//                PLAY -> {
+//                    binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
+//                    if (mAnimator.isPaused) {
+//                        mAnimator.resume()
+//                    } else {
+//                        mAnimator.start()
+//                    }
+//                }
+//                PAUSE, CLOSE -> {
+//                    mAnimator.pause()
+//                    binding.icPlay.setBackgroundResource(R.drawable.ic_play_circle_2)
+//                }
+                PREV -> {
+                    Log.d(TAG, "上一曲")
+                    runOnUiThread {
+                        val song = songDao.loadLastPlayingSong()
+                        binding.tvTitle.text = song?.name
+                        binding.tvSinger.text=song?.artist
+                        Picasso.get().load(song?.albumUrl).fit().into(binding.imgAlbum)
+                    }
+                }
+                NEXT -> {
+                    Log.d(TAG, "下一曲")
+                    runOnUiThread {
+                        val song = songDao.loadLastPlayingSong()
+                        binding.tvTitle.text = song?.name
+                        binding.tvSinger.text=song?.artist
+                        Picasso.get().load(song?.albumUrl).fit().into(binding.imgAlbum)
+                    }
+                }
+
+                else -> {}
+            }
+        }
     }
     private fun songsRequest(songId:Int){
         //请求音频文件的代码
@@ -317,7 +367,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             //intent.putExtra("time",it.response.data[0].time)
                             binding.tvTotal.text=time(it.response.data[0].time)
                             //Log.e("serviceMusic","Start")
-
+                            intent.putExtra("position",position)
                             startService(intent)
                             //val songDao=AppDatabase.getDatabase(this@PlayerActivity).songDao()
                             //myService.updateNotificationShow(songDao.loadId()-1)

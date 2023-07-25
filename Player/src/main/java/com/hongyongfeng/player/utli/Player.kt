@@ -38,11 +38,12 @@ class Player {
         }
         mediaPlayer.setOnCompletionListener {
             listener3()
-            Log.d("MediaPlayer","播放已完成,准备播放下一首")
-            it.reset()
+            //Log.d("MediaPlayer","播放已完成,准备播放下一首")
+            //it.reset()
 
         }
         mediaPlayer.setOnErrorListener{ _: MediaPlayer, _: Int, _: Int ->
+            //println("错误")
             true
         }
     }

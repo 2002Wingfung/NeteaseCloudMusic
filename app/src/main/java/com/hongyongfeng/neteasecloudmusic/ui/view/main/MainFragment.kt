@@ -137,24 +137,35 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
 
         adapterCollect.setOnItemClickListener {
             view:View,position:Int->
-//            position.showToast(activity)
-//            (view.findViewById(R.id.tv_title) as TextView).text="niubi"
-//            println((view.findViewById(R.id.tv_title) as TextView).text)
+            val bundle=Bundle()
+            val collect=listCollect[position]
+            bundle.putLong("id",collect.id)
+            //Log.e("collect",collect.id.toString())
+            bundle.putString("listName",collect.name)
+            bundle.putString("url",collect.coverImgUrl)
+            bundle.putString("creator",collect.creator.nickname)
+            findNavController().navigate(R.id.action_mainFragment_to_listFragment,bundle)
 
         }
         adapterEstablish.setOnItemClickListener {
             view:View,position:Int->
-////            position.showToast(activity)
-//            (view.findViewById(R.id.tv_title) as TextView).text="niubi"
 
-            println((view.findViewById(R.id.tv_title) as TextView).text)
+            val bundle=Bundle()
+            val establish=listEstablish[position]
+            bundle.putLong("id",establish.id)
+            bundle.putString("listName",establish.name)
+            bundle.putString("url",establish.coverImgUrl)
+            bundle.putString("creator",establish.creator.nickname)
+            findNavController().navigate(R.id.action_mainFragment_to_listFragment,bundle)
+
+            //println((view.findViewById(R.id.tv_title) as TextView).text)
         }
         binding.btnNva.setOnClickListener{
             mActivity.findViewById<DrawerLayout>(R.id.drawer_layout).openDrawer(GravityCompat.START)
             //println("success")
         }
         binding.layoutLikes.setOnClickListener {
-            findNavController().navigate(R.id.action_mainFragment_to_listFragment)
+            //findNavController().navigate(R.id.action_mainFragment_to_listFragment)
 
         }
         binding.layoutRecently.setOnClickListener {

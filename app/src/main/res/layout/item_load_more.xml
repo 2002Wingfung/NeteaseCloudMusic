@@ -11,6 +11,7 @@
     android:layout_height="wrap_content">
 
     <ProgressBar
+        android:id="@+id/progress_bar"
         android:layout_width="23dp"
         android:layout_height="23dp"
         />
@@ -19,6 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:textSize="17sp"
+        android:id="@+id/tv_load"
         android:layout_marginStart="10dp"
         android:text="正在加载更多"
         />

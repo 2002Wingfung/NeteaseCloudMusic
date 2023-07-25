@@ -50,7 +50,9 @@ class RecentlyFragment: BaseFragment<FragmentRecentlyBinding, RecentlyViewModel>
         this.viewModel=viewModel!!
         mActivity=requireActivity()
         viewModel.getSongList {
-            listSongs.addAll(it)
+            if (listSongs.isEmpty()){
+                listSongs.addAll(it)
+            }
         }
 //        viewModel.songList.observe(mActivity){
 //            listSongs.addAll(it)

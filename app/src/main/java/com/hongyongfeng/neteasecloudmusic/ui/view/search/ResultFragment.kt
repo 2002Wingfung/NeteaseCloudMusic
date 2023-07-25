@@ -5,10 +5,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
+import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.adapter.SongsAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentResultBinding
@@ -84,7 +87,18 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                             //println(String(songsName.bytes()))
                             //println(songsName)
 
-                            listSongs.addAll(songsList)
+                            if(songsList.isNotEmpty()){
+                                listSongs.addAll(songsList)
+
+                            }else{
+                                val view = recyclerView.getChildAt(recyclerView.childCount - 1)
+                                if (view != null) {
+                                    val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
+                                    bar.visibility = View.GONE
+                                    val tv = view.findViewById<TextView>(R.id.tv_load)
+                                    tv.text="没有更多内容了"
+                                }
+                            }
                             adapter.notifyItemChanged(listSongs.size)
 
                             //println(listSongs.get(0))
@@ -95,8 +109,6 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                             //Toast.makeText(requireContext(), "登录成功", Toast.LENGTH_SHORT).show()
                             //findNavController().navigate(R.id.action_loginFragment_to_mainNavFragment)
                         }
-
-                        else -> {}
                     }
                 }
             }
@@ -134,6 +146,14 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
 //                            adapter.notifyItemChanged(listSongs.size - 1)
 //                        }
 
+                    }
+                }else{
+                    val view = recyclerView.getChildAt(recyclerView.childCount - 1)
+                    if (view != null) {
+                        val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
+                        bar.visibility = View.GONE
+                        val tv = view.findViewById<TextView>(R.id.tv_load)
+                        tv.text="没有更多内容了"
                     }
                 }
             }

@@ -105,7 +105,7 @@ class RecentlyFragment: BaseFragment<FragmentRecentlyBinding, RecentlyViewModel>
             startActivity(intent)
         },{
                 view,position->
-            ("删除$position").showToast(mActivity)
+            //("删除$position").showToast(mActivity)
             songDao.deleteSongById(position+1)
             songDao.updateSongById(position+2)
             listSongs.removeAt(position)

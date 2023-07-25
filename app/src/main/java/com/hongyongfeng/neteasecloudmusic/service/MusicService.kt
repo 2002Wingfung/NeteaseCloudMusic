@@ -1,5 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.service
 
+import LiveDataBus
+import LiveDataBus.BusMutableLiveData
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.*
@@ -37,9 +39,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Call
 import java.io.IOException
-import java.lang.Exception
 import kotlin.concurrent.thread
-import kotlin.properties.Delegates
 
 
 class MusicService : Service() {
@@ -47,10 +47,11 @@ class MusicService : Service() {
      * 通知栏视图
      */
     private var remoteViews: RemoteViews? = null
+
     /**
      * 音乐播放器
      */
-    private lateinit var musicReceiver:MusicReceiver
+    private lateinit var musicReceiver: MusicReceiver
     private val mBinder = MediaPlayerBinder()
     private var isFirst = false
 
@@ -65,11 +66,10 @@ class MusicService : Service() {
     private var mList: List<Song> = ArrayList()
 
 
-
     /**
      * 记录播放的位置
      */
-    private var playPosition=-1
+    private var playPosition = -1
 
     /**
      * 通知
@@ -85,6 +85,11 @@ class MusicService : Service() {
      * 通知管理器
      */
     private var manager: NotificationManager? = null
+
+    /**
+     * 通知栏控制Activity页面UI
+     */
+    private var activityLiveData: BusMutableLiveData<String>? = null
 
     companion object {
         @JvmStatic
@@ -151,14 +156,19 @@ class MusicService : Service() {
         intentFilter.addAction(CLOSE)
         registerReceiver(musicReceiver, intentFilter)
     }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
+        activityLiveData = LiveDataBus.instance.with("activity_control", String::class.java)
+
         initRemoteViews()
+
         //注册动态广播
         registerMusicReceiver();
         initNotification()
-        mList=songDao.loadAllSongs()
+        mList = songDao.loadAllSongs()
+
         //showGtNotification()
     }
 
@@ -210,7 +220,7 @@ class MusicService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e("MyService", mediaPlayer.toString())
-        mList=songDao.loadAllSongs()
+        mList = songDao.loadAllSongs()
         //每次启动服务的时候是更新播放列表的时候
         val url = intent?.getStringExtra("url")
 
@@ -221,8 +231,8 @@ class MusicService : Service() {
                 val intentBroadcastReceiver = Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
                 sendBroadcast(intentBroadcastReceiver);
-                val songDao=AppDatabase.getDatabase(this).songDao()
-                updateNotificationShow(songDao.loadId()-1)
+                val songDao = AppDatabase.getDatabase(this).songDao()
+                updateNotificationShow(songDao.loadId() - 1)
             }, {
                 val intentBroadcastReceiver = Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_PERCENT;
@@ -237,15 +247,15 @@ class MusicService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-//    fun getMediaPlayer():MediaPlayer{
+    //    fun getMediaPlayer():MediaPlayer{
 //        return this.mediaPlayers
 //    }
     override fun onDestroy() {
         runBlocking {
             launch {
-                Log.e("MusicService","onDestroy")
+                Log.e("MusicService", "onDestroy")
 
-                val songDao= AppDatabase.getDatabase(this@MusicService).songDao()
+                val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
                 songDao.updateIsPlaying(false, lastPlay = true)
 //                for (song in songDao.loadAllSongs()){
 //                    Log.e("MainActivity",song.toString()+"id:${song.id}")
@@ -255,13 +265,14 @@ class MusicService : Service() {
                 mediaPlayer.stop()
                 mediaPlayer.release()
             }
+            launch {
+                closeNotification()
+                unregisterReceiver(musicReceiver)
+            }
+
         }
         super.onDestroy()
-        closeNotification()
-        if (musicReceiver != null) {
-            //解除动态注册的广播
-            unregisterReceiver(musicReceiver);
-        }
+
         //将数据库表中的isPlaying字段设为false
         //开设一个字段lastSong
         //将最后一首播放的歌曲的lastSong设为true，用于底部播放器和通知栏播放器的显示
@@ -276,13 +287,24 @@ class MusicService : Service() {
 
         //通知栏控制器上一首按钮广播操作
         val intentPrev = Intent(PREV)
-        val prevPendingIntent: PendingIntent? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            //设置延迟意图
-            PendingIntent.getBroadcast(this, 0, intentPrev, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val prevPendingIntent: PendingIntent? =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                //设置延迟意图
+                PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    intentPrev,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
 
-        } else {
-            PendingIntent.getBroadcast(this, 0, intentPrev, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT)
-        }
+            } else {
+                PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    intentPrev,
+                    PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+            }
         //为prev控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_previous, prevPendingIntent)
 
@@ -290,10 +312,20 @@ class MusicService : Service() {
         val intentPlay = Intent(PLAY)
         val playPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             //设置延迟意图
-            PendingIntent.getBroadcast(this, 0, intentPlay, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                intentPlay,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         } else {
-            PendingIntent.getBroadcast(this, 0, intentPlay, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                intentPlay,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }
         //为play控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_play, playPendingIntent)
@@ -302,10 +334,20 @@ class MusicService : Service() {
         val intentNext = Intent(NEXT)
         val nextPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             //设置延迟意图
-            PendingIntent.getBroadcast(this, 0, intentNext, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                intentNext,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         } else {
-            PendingIntent.getBroadcast(this, 0, intentNext, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                intentNext,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }
         //为next控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_next, nextPendingIntent)
@@ -314,15 +356,26 @@ class MusicService : Service() {
         val intentClose = Intent(CLOSE)
         val closePendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             //设置延迟意图
-            PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                intentClose,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         } else {
-            PendingIntent.getBroadcast(this, 0, intentClose, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                intentClose,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }
         //为close控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_close, closePendingIntent)
 
     }
+
     /**
      * 显示通知
      */
@@ -351,10 +404,15 @@ class MusicService : Service() {
         intent1.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
         val pi = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             //设置延迟意图
-            PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getActivity(
+                this,
+                0,
+                intent1,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
 
         } else {
-            PendingIntent.getActivity(this, 0, intent1,  PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_UPDATE_CURRENT)
         }
         notification = NotificationCompat.Builder(this, "play_control")
             .setWhen(System.currentTimeMillis())
@@ -384,7 +442,10 @@ class MusicService : Service() {
         if (mediaPlayer.isPlaying) {
             remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_pause_blue)
         } else {
-            remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_play_circle_2_blue)
+            remoteViews!!.setImageViewResource(
+                R.id.btn_notification_play,
+                R.drawable.ic_play_circle_2_blue
+            )
         }
         //歌曲名
         remoteViews!!.setTextViewText(R.id.Notification2Activity_music_name, mList[position].name)
@@ -392,46 +453,51 @@ class MusicService : Service() {
         remoteViews!!.setTextViewText(R.id.tv_singer, mList[position].artist)
 
         //发送通知
-        //manager!!.notify(NOTIFICATION_ID, notification)
+        manager!!.notify(NOTIFICATION_ID, notification)
         try {
-            Picasso.get()
-                .load(mList[position].albumUrl)
-                .resize(128,128)
-                .into(object : com.squareup.picasso.Target {
-                    override fun onBitmapLoaded(bitmap: Bitmap?, from: LoadedFrom?) {
-                        /* Save the bitmap or do something with it here */
-                        //Set it in the ImageView
-                        remoteViews!!.setImageViewBitmap(R.id.img_album, bitmap)
-                        manager!!.notify(NOTIFICATION_ID, notification)
+            if (mList[position].albumUrl.isNullOrEmpty()){
+                println("empty")
+                songDao.loadLastPlayingSong()?.albumUrl.apply {
+                    if (this.isNullOrEmpty()){
+                        println("still empty")
+                        //请求网络获取图片url
+                        //getAPI()
+                    }else{
+                        Picasso.get()
+                            .load(this)
+                            .resize(128, 128)
+                            .into(object : com.squareup.picasso.Target {
+                                override fun onBitmapLoaded(bitmap: Bitmap?, from: LoadedFrom?) {
+                                    remoteViews!!.setImageViewBitmap(R.id.img_album, bitmap)
+                                    manager!!.notify(NOTIFICATION_ID, notification)
+                                }
+                                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                                }
+                                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                                }
+                            })
                     }
-
-                    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-                        //TODO("Not yet implemented")
-                    }
-
-                    override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
-                        //TODO("Not yet implemented")
-                    }
-                })
-
-//            notification?.let {
-//                Picasso.get().load(mList[position].albumUrl).into(remoteViews!!,R.id.img_album,NOTIFICATION_ID,
-//                    it
-//                )
-//            }
-            //manager!!.notify(NOTIFICATION_ID, notification)
-
-            //封面专辑
-//                remoteViews!!.setImageViewBitmap(
-//                    R.id.img_album,
-//                    bitmap)
-
-        }catch (e:IOException){
+                }
+            }else{
+                Picasso.get()
+                    .load(mList[position].albumUrl)
+                    .resize(128, 128)
+                    .into(object : com.squareup.picasso.Target {
+                        override fun onBitmapLoaded(bitmap: Bitmap?, from: LoadedFrom?) {
+                            remoteViews!!.setImageViewBitmap(R.id.img_album, bitmap)
+                            manager!!.notify(NOTIFICATION_ID, notification)
+                        }
+                        override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                        }
+                        override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                        }
+                    })
+            }
+        } catch (e: IOException) {
             e.printStackTrace()
         }
-
-
     }
+
     /**
      * 创建通知渠道
      *
@@ -451,42 +517,46 @@ class MusicService : Service() {
         manager!!.createNotificationChannel(channel)
     }
 
-    private val songDao= AppDatabase.getDatabase(this@MusicService).songDao()
+    private val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
 
-    private val requestBuilder= RequestBuilder()
-    private fun <T>getAPI(apiType:Class<T>):T= requestBuilder.getAPI(apiType)
+    private val requestBuilder = RequestBuilder()
+    private fun <T> getAPI(apiType: Class<T>): T = requestBuilder.getAPI(apiType)
 
     @OptIn(DelicateCoroutinesApi::class)
-    fun <T> Call<T>.getResponse(process: suspend (flow: Flow<APIResponse<T>>)->Unit){
+    fun <T> Call<T>.getResponse(process: suspend (flow: Flow<APIResponse<T>>) -> Unit) {
 
-        GlobalScope.launch (Dispatchers.IO){
+        GlobalScope.launch(Dispatchers.IO) {
             process(requestBuilder.getResponseFlow {
                 this@getResponse.execute()//this特指getResponse的调用者而不是协程作用域
             })
         }
     }
+
     /**
      * 播放
      */
-    fun play(position: Int) {
-        val prefs=getSharedPreferences("player",Context.MODE_PRIVATE)
+    fun play(position: Int,status:Int) {
+        val prefs = getSharedPreferences("player", Context.MODE_PRIVATE)
 
-        prefs.edit{
-            putInt("songId",mList[position].songId.toInt())
+        prefs.edit {
+            putInt("songId", mList[position].songId.toInt())
         }
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
             //监听音乐播放完毕事件，自动下一曲
-            mediaPlayer.setOnCompletionListener{
+            mediaPlayer.setOnCompletionListener {
                 nextMusic()
             }
-        }else{
-            mediaPlayer.setOnCompletionListener{
+        } else {
+            mediaPlayer.setOnCompletionListener {
                 nextMusic()
             }
             mediaPlayer.setOnPreparedListener {
                 mediaPlayer.start()
-                remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_pause_blue)
+                remoteViews!!.setImageViewResource(
+                    R.id.btn_notification_play,
+                    R.drawable.ic_pause_blue
+                )
             }
         }
         //播放时 获取当前歌曲列表是否有歌曲
@@ -499,55 +569,64 @@ class MusicService : Service() {
             //切歌前先重置，释放掉之前的资源
             mediaPlayer.reset()
             playPosition = position
-            val songId=mList[position].songId
+            val songId = mList[position].songId
             thread {
                 songDao.updateIsPlaying(false, lastPlay = true)
                 songDao.updateLastPlaying(false, origin = true)
-                songDao.updateLastPlayingById(true,position.toLong()+1)
+                songDao.updateLastPlayingById(true, position.toLong() + 1)
                 songDao.updateIsPlaying(true, lastPlay = true)
             }
-            getAPI(PlayerInterface::class.java).getAlbum(mList[position].albumId.toString()).getResponse {
-                    flow ->
-                flow.collect(){
-                    when(it){
-                        is APIResponse.Error-> {
-                            Log.e("TAGInternet",it.errMsg)
-                            withContext(Dispatchers.Main){
-                                Toast.makeText(this@MusicService, "网络连接错误", Toast.LENGTH_SHORT).show()
+            getAPI(PlayerInterface::class.java).getAlbum(mList[position].albumId.toString())
+                .getResponse { flow ->
+                    flow.collect() {
+                        when (it) {
+                            is APIResponse.Error -> {
+                                Log.e("TAGInternet", it.errMsg)
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(this@MusicService, "网络连接错误", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
                             }
-                        }
-                        is APIResponse.Loading-> Log.e("TAG","loading")
-                        is APIResponse.Success-> withContext(Dispatchers.Main){
-                            val url=it.response.songs[0].al.picUrl
-                            mList[position].albumUrl=url
-                            songDao.updateAlbumUrl(url,mList[position].albumId.toInt())
-                            updateNotificationShow(position)
+                            is APIResponse.Loading -> Log.e("TAG", "loading")
+                            is APIResponse.Success -> withContext(Dispatchers.Main) {
+                                val url = it.response.songs[0].al.picUrl
+                                mList[position].albumUrl = url
+                                songDao.updateLastPlaying(false, origin = true)
+                                songDao.updateAlbumUrlAndLastPlaying(url, mList[position].albumId.toInt())
 
+                                updateNotificationShow(position)
+                                if (status==1){
+                                    activityLiveData?.value=(PREV)
+                                }else if (status==2){
+                                    activityLiveData?.value=(NEXT)
+                                }
+                                activityLiveData?.postValue(PLAY)
+                            }
                         }
                     }
                 }
-            }
-            getAPI(PlayerInterface::class.java).getSong(songId.toString()).getResponse {
-                    flow ->
-                flow.collect(){
-                    when(it){
-                        is APIResponse.Error-> {
-                            Log.e("TAGInternet",it.errMsg)
-                            withContext(Dispatchers.Main){
-                                Toast.makeText(this@MusicService, "网络连接错误", Toast.LENGTH_SHORT).show()
-                                if (mediaPlayer.isPlaying){
+            getAPI(PlayerInterface::class.java).getSong(songId.toString()).getResponse { flow ->
+                flow.collect() {
+                    when (it) {
+                        is APIResponse.Error -> {
+                            Log.e("TAGInternet", it.errMsg)
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(this@MusicService, "网络连接错误", Toast.LENGTH_SHORT)
+                                    .show()
+                                if (mediaPlayer.isPlaying) {
                                     mediaPlayer.pause()//暂停播放
                                 }
                             }
                         }
-                        is APIResponse.Loading-> Log.e("TAG","loading")
-                        is APIResponse.Success-> withContext(Dispatchers.Main){
-                            val url=it.response.data[0].url
+                        is APIResponse.Loading -> Log.e("TAG", "loading")
+                        is APIResponse.Success -> withContext(Dispatchers.Main) {
+                            val url = it.response.data[0].url
                             //设置播放音频的资源路径
                             mediaPlayer.setDataSource(url)
                             mediaPlayer.prepareAsync()
                             //显示通知
                             updateNotificationShow(position)
+                            activityLiveData?.postValue(PLAY)
                         }
                     }
                 }
@@ -563,23 +642,24 @@ class MusicService : Service() {
      * 上一首
      */
     fun previousMusic() {
-        if (playPosition==-1){
-            playPosition= ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1))?:0
+        if (playPosition == -1) {
+            playPosition = ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1)) ?: 0
         }
         if (playPosition == 0) {
             playPosition = mList.size - 1
         } else {
             playPosition -= 1
         }
-        play(playPosition)
+        activityLiveData?.postValue(PREV)
+        play(playPosition,1)
     }
 
     /**
      * 下一首
      */
     fun nextMusic() {
-        if (playPosition==-1){
-            playPosition= ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1))?:0
+        if (playPosition == -1) {
+            playPosition = ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1)) ?: 0
         }
         mediaPlayer.reset()
         if (playPosition >= mList.size - 1) {
@@ -587,7 +667,8 @@ class MusicService : Service() {
         } else {
             playPosition += 1
         }
-        play(playPosition)
+        activityLiveData?.postValue(NEXT)
+        play(playPosition,2)
     }
 
     /**
@@ -596,17 +677,20 @@ class MusicService : Service() {
     fun pauseOrContinueMusic() {
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()
+            activityLiveData?.postValue(PAUSE)
             thread {
                 songDao.updateIsPlaying(false, lastPlay = true)
             }
         } else {
             mediaPlayer.start()
+            activityLiveData?.postValue(PLAY)
+
             thread {
                 songDao.updateIsPlaying(true, lastPlay = true)
             }
         }
-        if (playPosition==-1){
-            playPosition= ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1))?:0
+        if (playPosition == -1) {
+            playPosition = ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1)) ?: 0
         }
         //更改通知栏播放状态
         updateNotificationShow(playPosition)
@@ -616,11 +700,10 @@ class MusicService : Service() {
      * 关闭音乐通知栏
      */
     fun closeNotification() {
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying) {
-                mediaPlayer.pause()
-            }
+        if (mediaPlayer.isPlaying) {
+            mediaPlayer.pause()
         }
         manager!!.cancel(NOTIFICATION_ID)
+        activityLiveData?.postValue(CLOSE)
     }
 }

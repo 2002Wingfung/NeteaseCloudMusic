@@ -32,9 +32,10 @@ interface SongDao {
     fun updateLastPlayingById(lastPlaying:Boolean,id:Long)
     @Query("select * from Song where lastPlaying==1")
     fun loadLastPlayingSong():Song?
-    @Query("update song set albumUrl = :albumUrl where albumId= :albumId")
+    @Query("update song set albumUrl = :albumUrl  where albumId= :albumId")
     fun updateAlbumUrl(albumUrl:String,albumId:Int)
-
+    @Query("update song set albumUrl = :albumUrl ,lastPlaying=1 where albumId= :albumId")
+    fun updateAlbumUrlAndLastPlaying(albumUrl:String,albumId:Int)
     @Query("delete FROM sqlite_sequence WHERE name = 'Song'")
     fun clearAutoIncrease()
 

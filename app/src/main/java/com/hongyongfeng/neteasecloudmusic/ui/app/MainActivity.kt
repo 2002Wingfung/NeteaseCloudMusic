@@ -1,11 +1,11 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
-import android.Manifest
+import LiveDataBus
+import LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.*
 import android.util.Log
@@ -18,15 +18,14 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
-import com.hongyongfeng.neteasecloudmusic.R
+import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
+import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
-import com.hongyongfeng.neteasecloudmusic.receiver.NotificationClickReceiver
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.ui.view.main.MainFragment
 import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
-import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.permissionx.guolindev.PermissionX
 import com.squareup.picasso.Picasso
 import kotlin.concurrent.thread
@@ -34,21 +33,16 @@ import kotlin.system.exitProcess
 
 
 class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate,true) {
-    //private lateinit var binding:ActivityMainBinding
-//    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-//        if (ev.action == MotionEvent.ACTION_DOWN) {
-//            //获取当前获得焦点的View
-//            val view = currentFocus
-//            //调用方法判断是否需要隐藏键盘
-//            KeyboardUtils.hideKeyboard(ev, view, this)
-//        }
-//        return super.dispatchTouchEvent(ev)
-//    }
     /**
      * 图片动画
      */
     private lateinit var logoAnimation: ObjectAnimator
-    var mBackPressed: Long = 0
+    private var mBackPressed: Long = 0
+
+    /**
+     * 当Service中通知栏有变化时接收到消息
+     */
+    private var activityLiveData: BusMutableLiveData<String>? = null
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             musicBinder = service as MusicService.MediaPlayerBinder
@@ -78,8 +72,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     if(this.childFragmentManager.fragments.isNotEmpty()){
                         this.childFragmentManager.fragments[0].apply {
                             for (fragment in this.childFragmentManager.fragments){
-                                //println(fragment)
-                                //Log.d("fragmentback",fragment.toString())
                                 if (fragment is HotFragment) {
                                     try {
                                         activity!!.supportFragmentManager.popBackStack()
@@ -97,24 +89,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }
         }
 
-    }
-    private val mHandler: Handler = object :Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message) {
-            super.handleMessage(msg)
-            // 展示给进度条和当前时间
-
-
-            //更新进度
-            updateProgress()
-        }
-    }
-    /**
-     * 更新进度
-     */
-    private fun updateProgress() {
-        // 使用Handler每间隔1s发送一次空消息，通知进度条更新
-        // 使用MediaPlayer获取当前播放时间除以总时间的进度
-        //mHandler.sendEmptyMessageDelayed(0, 1000)
     }
 
     /**
@@ -159,25 +133,70 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
 
         }
     }
+
+    private lateinit var songDao:SongDao
+    /**
+     * 通知栏动作观察者
+     */
+    private fun notificationObserver() {
+        songDao=AppDatabase.getDatabase(this).songDao()
+        activityLiveData = LiveDataBus.instance.with("activity_control", String::class.java)
+        activityLiveData!!.observe(this@MainActivity, true
+        ) { value ->
+            when (value) {
+                PLAY -> {
+                    imgButton.setIconResource(R.drawable.ic_pause)
+                    if (logoAnimation.isPaused) {
+                        logoAnimation.resume()
+                    }else{
+                        logoAnimation.start()
+                    }
+                }
+                PAUSE, CLOSE -> {
+                    logoAnimation.pause()
+                    imgButton.setIconResource(R.drawable.ic_play_circle_2)
+                }
+                PREV -> {
+                    Log.d(TAG, "上一曲")
+                    runOnUiThread{
+                        val song=songDao.loadLastPlayingSong()
+                        val text=song?.name+" - "+song?.artist
+                        binding.tvSongName.text=text
+                        Picasso.get().load(song?.albumUrl).fit().into(binding.ivLogo)
+                    }
+                }
+                NEXT -> {
+                    Log.d(TAG, "下一曲")
+                    runOnUiThread{
+                        val song=songDao.loadLastPlayingSong()
+                        val text=song?.name+" - "+song?.artist
+                        binding.tvSongName.text=text
+                        Picasso.get().load(song?.albumUrl).fit().into(binding.ivLogo)
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
     private val requestList = ArrayList<String>()
 
+    /**
+     * 当在Activity中做出播放状态的改变时，通知做出相应改变
+     */
+    private val notificationLiveData: BusMutableLiveData<String>? = null
     private lateinit var headerLayout:View
     private lateinit var nav:NavigationView
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestList.add(PermissionX.permission.POST_NOTIFICATIONS)
-//        val intentFilter = IntentFilter()
-//        intentFilter.addAction("com.example.broadcastbestpractice.FORCE_OFFLINE")
-//        val receiver = NotificationClickReceiver()
-//        registerReceiver(receiver, intentFilter)
         PermissionX.init(this)
             .permissions(requestList)
             .onExplainRequestReason { scope, deniedList ->
                 val message = "PermissionX需要您同意以下权限才能正常使用"
                 scope.showRequestReasonDialog(deniedList, message, "Allow", "Deny")
             }
-            .request { allGranted, grantedList, deniedList ->
+            .request { allGranted, _, deniedList ->
                 if (allGranted) {
                     //Toast.makeText(this, "所有申请的权限都已通过", Toast.LENGTH_SHORT).show()
                 } else {
@@ -187,8 +206,8 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }
 
         nav=binding.navView
-        nav.layoutParams.width= resources.displayMetrics.widthPixels *4/ 5;//屏幕的三分之一
-        nav.layoutParams = nav.layoutParams;
+        nav.layoutParams.width= resources.displayMetrics.widthPixels *4/ 5//屏幕的三分之一
+        nav.layoutParams = nav.layoutParams
         headerLayout =nav.inflateHeaderView(R.layout.nav_header)
 
         initView()
@@ -197,52 +216,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         initBottomPlayer()
         val intent = Intent(this, MusicService::class.java)
         bindService(intent,mServiceConnection,BIND_AUTO_CREATE)
-        //updateProgress()
-        //StatusBarUtils.setWindowStatusBarColor(this, R.color.transparent)
-//        setContentView(binding.root)
-////        val window: Window = getWindow()
-////        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or  View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN )
-
-
-        //initListener()
-//        val nav:NavigationView=binding.navView
-//        nav.layoutParams.width=getResources().getDisplayMetrics().widthPixels *4/ 5;//屏幕的三分之一
-//
-//        nav.setLayoutParams(nav.layoutParams);
-//        val headerLayout =nav.inflateHeaderView(R.layout.nav_header)
-//        headerLayout.setOnClickListener{
-//            "登录".showToast(this)
-//        }
-//        nav.setNavigationItemSelectedListener {
-//            when(it.itemId){
-//                R.id.item1 ->{
-//                    Toast.makeText(this, "我的消息", Toast.LENGTH_SHORT).show();
-//                    //加载碎片
-//                    //getSupportFragmentManager().beginTransaction().replace(R.id.content,new Fragment_05()).commit();
-//                    //binding.drawerLayout.closeDrawer(GravityCompat.START);//关闭侧滑栏
-//
-//                }
-//                R.id.item2 -> {
-//                    Toast.makeText(this, "设置", Toast.LENGTH_SHORT).show()
-//
-//                }
-//
-//                R.id.item3 -> {
-//                    Toast.makeText(this, "深色模式", Toast.LENGTH_SHORT).show()
-//
-//                }
-//                R.id.item4 ->{
-//                    Toast.makeText(this, "关于", Toast.LENGTH_SHORT).show();
-//
-//                }
-//                R.id.item5 -> {
-//                    Toast.makeText(this, "退出登录", Toast.LENGTH_SHORT).show()
-//
-//                }
-//            }
-//            false
-//        }
-
+        notificationObserver()
     }
 
     private fun initView(){
@@ -256,7 +230,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         nav.setNavigationItemSelectedListener {
             when(it.itemId){
                 R.id.item1 ->{
-                    Toast.makeText(this, "我的消息", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "我的消息", Toast.LENGTH_SHORT).show()
                 }
                 R.id.item2 -> {
                     Toast.makeText(this, "设置", Toast.LENGTH_SHORT).show()
@@ -265,7 +239,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     Toast.makeText(this, "深色模式", Toast.LENGTH_SHORT).show()
                 }
                 R.id.item4 ->{
-                    Toast.makeText(this, "关于", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "关于", Toast.LENGTH_SHORT).show()
                 }
                 R.id.item5 -> {
                     Toast.makeText(this, "退出登录", Toast.LENGTH_SHORT).show()
@@ -299,7 +273,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         stopService(intent)
 
         unbindService(mServiceConnection)
-        exitProcess(0);
+        exitProcess(0)
     }
 
     private var counts=0
@@ -318,7 +292,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             if (counts!=0){
                 musicService!!.pauseOrContinueMusic()
             }else{
-                musicService!!.play(id-1)
+                musicService!!.play(id-1,0)
             }
             //
 

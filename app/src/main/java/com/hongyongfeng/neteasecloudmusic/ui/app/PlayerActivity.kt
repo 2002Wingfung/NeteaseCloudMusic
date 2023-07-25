@@ -25,6 +25,7 @@ import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
 import com.hongyongfeng.neteasecloudmusic.util.ImageLoader
+import com.hongyongfeng.neteasecloudmusic.util.MyApplication
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.squareup.picasso.Picasso
@@ -53,6 +54,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var timer:Timer
     private var count=0
     private var position :Int?=0
+    private lateinit var prefs: SharedPreferences
 
     /**
      * 当在Activity中做出播放状态的改变时，通知做出相应改变
@@ -154,7 +156,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         super.onCreate(savedInstanceState)
         //imageLoader= ImageLoader.build(this)
         initAnimation()
-
+        prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
         val bundle = intent.extras
         position=bundle?.getInt("position")
         val name=bundle?.getString("name")
@@ -265,6 +267,22 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
         notificationObserver()
         register()
+
+        prefs.getInt("mode",-1).apply {
+            if (this!=-1){
+                count1+=this
+                when(this){
+                    0->binding.icMode.setBackgroundResource(R.drawable.ic_order)
+                    1->binding.icMode.setBackgroundResource(R.drawable.ic_repeat)
+                    2->binding.icMode.setBackgroundResource(R.drawable.ic_random)
+                }
+            }else{
+                prefs.edit{
+                    putInt("mode",0)
+                }
+            }
+        }
+
     }
     private fun register(){
         val filterPercent = IntentFilter()
@@ -394,7 +412,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }
     }
     private fun picRequest(albumId:Int){
-
         //请求专辑图片的代码
         //先获取图片的url，再进行解析，然后转化成Bitmap
         publicViewModel!!.apply {
@@ -423,13 +440,14 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
 //                                1024,
 //                                1024
 //                            )
-
                         }
                     }
                 }
             }
         }
     }
+    var count1=0
+
     private fun initListener() {
         binding.btnBack.setOnClickListener {
             finish()
@@ -438,16 +456,14 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             if (count%2==0){
                 handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()
-
                 mAnimatorNeedlePause.start()
                 //"暂停".showToast(this)
                 it.background=  getDrawable(R.drawable.ic_play_circle_2)
                 if (mediaPlayer.isPlaying){
                     myService.pauseOrContinueMusic()
-//                    mediaPlayer.pause()//暂停播放
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
-                        //将isplaying设为false
+                        //将isPlaying设为false
                         songDao.updateIsPlaying(false, lastPlay = true)
                     }
                 }
@@ -455,11 +471,10 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 handler.sendEmptyMessageDelayed(1, 700)
                 mAnimatorNeedlePause.pause()
                 mAnimatorNeedleStart.start()
-                it.background=  getDrawable(R.drawable.ic_pause)
+                it.background = getDrawable(R.drawable.ic_pause)
                 if (!mediaPlayer.isPlaying){
                     //mediaPlayer.start()//开始播放
                     myService.pauseOrContinueMusic()
-
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                         //val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
@@ -476,9 +491,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 mAnimatorNeedleStart.start()
                 mAnimator.start()
                 binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
-
+                count++
             }
-            //Picasso.get().load(url).fit().into(binding.imgAlbum)
         }
         binding.icBack.setOnClickListener {
             myService.previousMusic()
@@ -488,36 +502,52 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 mAnimator.start()
                 mAnimatorNeedleStart.start()
                 binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
+                count++
             }
         }
-        binding.icMode.setOnClickListener {
-            "mode".showToast(this)
+        binding.icMode.apply {
+            setOnClickListener {
+                when(count1%3){
+                    0-> {
+                        this.setBackgroundResource(R.drawable.ic_repeat)
+                        prefs.edit{
+                            putInt("mode",1)
+                        }
+                    }
+                    1->{
+                        //随机
+                        this.setBackgroundResource(R.drawable.ic_random)
+                        prefs.edit{
+                            putInt("mode",2)
+                        }
+                    }
+                    2->{
+                        //顺序
+                        this.setBackgroundResource(R.drawable.ic_order)
+                        prefs.edit{
+                            putInt("mode",0)
+                        }
+                    }
+                }
+                count1++
+            }
         }
         binding.icList.setOnClickListener {
             "list".showToast(this)
         }
         seekBar.setOnSeekBarChangeListener(object : OnSeekBarChangeListener{
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                //MusicService.isChanging=true;
-                //println("progress is $progress")
                 binding.tvCurrent.text=time(progress)
-
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 MusicService.isChanging=true;
-
             }
-
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 //当拖动停止后，控制mediaPlayer播放指定位置的音乐
                 seekBar!!.max= mediaPlayer.duration
                 mediaPlayer.seekTo(seekBar.progress)
                 MusicService.isChanging=false;
-
-                //println(seekBar.progress)
             }
-
         })
     }
     private fun refresh(seekBar: SeekBar, mediaPlayer:MediaPlayer){
@@ -530,7 +560,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 }
             }
         },0,500)
-
     }
     override fun onDestroy() {
         super.onDestroy()
@@ -538,7 +567,5 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         if (::timer.isInitialized){
             timer.cancel()
         }
-//        mediaPlayer.stop()
-//        mediaPlayer.release()
     }
 }

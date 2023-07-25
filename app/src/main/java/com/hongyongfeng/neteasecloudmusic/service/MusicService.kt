@@ -557,6 +557,7 @@ class MusicService : Service() {
                     R.id.btn_notification_play,
                     R.drawable.ic_pause_blue
                 )
+                manager?.notify(NOTIFICATION_ID,notification)
             }
         }
         //播放时 获取当前歌曲列表是否有歌曲

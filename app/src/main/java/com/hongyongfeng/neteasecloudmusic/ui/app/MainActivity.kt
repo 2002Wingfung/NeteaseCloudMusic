@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
+import com.gsls.gtk.log
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
@@ -179,11 +180,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         }
     }
     private val requestList = ArrayList<String>()
-
-    /**
-     * 当在Activity中做出播放状态的改变时，通知做出相应改变
-     */
-    private val notificationLiveData: BusMutableLiveData<String>? = null
     private lateinit var headerLayout:View
     private lateinit var nav:NavigationView
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -219,6 +215,25 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         notificationObserver()
     }
 
+    override fun onStart() {
+        super.onStart()
+        Log.e("Main","start")
+        val song=songDao.loadLastPlayingSong()
+        val text=song?.name+" - "+song?.artist
+        binding.tvSongName.text=text
+        Picasso.get().load(song?.albumUrl).fit().into(binding.ivLogo)
+        if (MusicService.mediaPlayer.isPlaying){
+            if (logoAnimation.isPaused){
+                logoAnimation.resume()
+            }else{
+                logoAnimation.start()
+            }
+            imgButton.setIconResource(R.drawable.ic_pause)
+        }else{
+            logoAnimation.pause()
+            imgButton.setIconResource(R.drawable.ic_play_circle_2)
+        }
+    }
     private fun initView(){
         imgButton=binding.btnPlay
     }

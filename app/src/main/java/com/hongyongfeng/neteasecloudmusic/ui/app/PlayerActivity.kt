@@ -1,5 +1,6 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
+import LiveDataBus
 import android.animation.ObjectAnimator
 import android.content.*
 import android.media.MediaPlayer
@@ -13,6 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.edit
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.hongyongfeng.neteasecloudmusic.R
@@ -39,9 +41,7 @@ import kotlin.math.roundToInt
 public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     ActivityPlayerBinding::inflate,true
 ){
-
     private lateinit var imageLoader: ImageLoader
-
     private var albumId: Int=0
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
@@ -49,7 +49,10 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var seekBar: SeekBar
     private lateinit var timer:Timer
     private var count=0
-
+    /**
+     * 当在Activity中做出播放状态的改变时，通知做出相应改变
+     */
+    private var notificationLiveData: LiveDataBus.BusMutableLiveData<String>? = null
     private lateinit var myService: MusicService
     companion object {
         const val ACTION_SERVICE_PERCENT: String="action.percent"
@@ -232,6 +235,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                                 //"暂停".showToast(this)
                                 binding.icPlay.background=  getDrawable(R.drawable.ic_play_circle_2)
                             }
+                        }else{
+                            runOnUiThread{
+                                val duration=mediaPlayer.duration
+                                binding.tvTotal.text=time(duration)
+                            }
                         }
                     }
                 }
@@ -275,6 +283,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             seekBar.max=mediaPlayer.duration
             refresh(seekBar, mediaPlayer)
         }
+        notificationLiveData=LiveDataBus.instance.with("notification_control",String::class.java)
     }
     private fun songsRequest(songId:Int){
         //请求音频文件的代码
@@ -362,8 +371,6 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             finish()
         }
         binding.icPlay.setOnClickListener {
-
-
             if (count%2==0){
                 handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()

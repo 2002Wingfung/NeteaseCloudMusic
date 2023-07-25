@@ -300,20 +300,24 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             this@PlayerActivity, true
         ) { value ->
             when (value) {
+
                 PLAY -> {
-//                    binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
-//                    if (mAnimator.isPaused) {
-//                        mAnimator.resume()
-//                    } else {
-//                        mAnimator.start()
-//                    }
+                    runOnUiThread{
+                        binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
+                        if (mAnimator.isPaused) {
+                            mAnimator.resume()
+                        } else {
+                            mAnimator.start()
+                        }
+                    }
                 }
                 PAUSE, CLOSE -> {
-//                    mAnimator.pause()
-//                    binding.icPlay.setBackgroundResource(R.drawable.ic_play_circle_2)
+                    runOnUiThread {
+                        mAnimator.pause()
+                        binding.icPlay.setBackgroundResource(R.drawable.ic_play_circle_2)
+                    }
                 }
                 PREV -> {
-                    Log.d(TAG, "上一曲")
                     runOnUiThread {
                         val song = songDao.loadLastPlayingSong()
                         binding.tvTitle.text = song?.name
@@ -322,7 +326,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     }
                 }
                 NEXT -> {
-                    Log.d(TAG, "下一曲")
                     runOnUiThread {
                         val song = songDao.loadLastPlayingSong()
                         binding.tvTitle.text = song?.name
@@ -330,12 +333,12 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         Picasso.get().load(song?.albumUrl).fit().into(binding.imgAlbum)
                     }
                 }
-                "percent"->{
-                }
                 "prepared"->{
-                    val duration= mediaPlayer.duration
-                    seekBar.max=duration
-                    refresh(seekBar, mediaPlayer)
+                    runOnUiThread {
+                        val duration= mediaPlayer.duration
+                        seekBar.max=duration
+                        refresh(seekBar, mediaPlayer)
+                    }
                 }
                 else -> {
                     val percent=value.toInt()

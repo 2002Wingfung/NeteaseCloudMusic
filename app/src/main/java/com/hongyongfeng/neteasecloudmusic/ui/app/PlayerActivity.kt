@@ -28,6 +28,7 @@ import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.fragment_player.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -49,6 +50,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var timer:Timer
     private var count=0
 
+    private lateinit var myService: MusicService
     companion object {
         const val ACTION_SERVICE_PERCENT: String="action.percent"
         const val ACTION_SERVICE_NEED: String="action.ServiceNeed"
@@ -56,8 +58,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     private var mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-//            val myService: MusicService = (service as MusicService.MediaPlayerBinder).getMusicService()
-//            mediaPlayer = myService.getMediaPlayer()
+            myService = (service as MusicService.MediaPlayerBinder).getMusicService()
         }
 
         override fun onServiceDisconnected(name: ComponentName) {}
@@ -144,8 +145,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        imageLoader= ImageLoader.build(this)
+        //imageLoader= ImageLoader.build(this)
         initAnimation()
+
         val bundle = intent.extras
 
         val name=bundle?.getString("name")
@@ -155,13 +157,17 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             albumId=albumIdResult
             picRequest(albumId)
         }
-
+        val intent1 = Intent(this@PlayerActivity, MusicService::class.java)
+        bindService(
+            intent1, mServiceConnection,
+            BIND_AUTO_CREATE
+        )
         val songId=bundle?.getInt("id")
         val singer=bundle?.getString("singer")
+
         if (songId!=null){
             //储存id到sp，然后每次进行oncreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaplayer，
             //如果不一样则重置
-            println("songId is $songId")
             val prefs=getSharedPreferences("player",Context.MODE_PRIVATE)
             val songIdOrigin=prefs.getInt("songId",-1)
             if (songIdOrigin==-1){
@@ -174,13 +180,11 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 }
             }else if (songIdOrigin!=songId){
                 Log.e("MyPlayerActivity","与上一首不是同一首歌")
-
                 if (mediaPlayer.isPlaying){
                     mediaPlayer.stop()
                     mediaPlayer.reset()
                 }else{
                     mediaPlayer.reset()
-
                 }
                 //if (::mediaPlayer.isInitialized){
 
@@ -207,7 +211,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         songsRequest(songId)
                     }
                 }else{
-                    val songDao=AppDatabase.getDatabase(this).songDao()
+                    val songDao=AppDatabase.getDatabase(this@PlayerActivity).songDao()
                     thread {
                         val song=songDao.loadIsPlayingSong()
                         if(song==null){
@@ -231,9 +235,7 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         }
                     }
                 }
-
             }
-
         }
 
         binding.tvSinger.text=singer
@@ -306,12 +308,10 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             //intent.putExtra("time",it.response.data[0].time)
                             binding.tvTotal.text=time(it.response.data[0].time)
                             //Log.e("serviceMusic","Start")
-                            bindService(
-                                intent, mServiceConnection,
-                                BIND_AUTO_CREATE
-                            )
+
                             startService(intent)
-                            //每次启动服务的时候把List<Song>用bundle传参，这样就可以把列表的数据传到Service中去了
+                            //val songDao=AppDatabase.getDatabase(this@PlayerActivity).songDao()
+                            //myService.updateNotificationShow(songDao.loadId()-1)
                             //在点击列表的时候把当前列表的List保存到数据库中，用room
                             //在数据库表中加一列做是否当前正在播放，将正在播放的显示在MainActivity的底部播放器和通知栏播放器中
                         }
@@ -362,8 +362,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             finish()
         }
         binding.icPlay.setOnClickListener {
-            //mediaPlayer.prepare()
-            //println(mediaPlayer)
+
+
             if (count%2==0){
                 handler.sendEmptyMessageDelayed(0, 700)
                 mAnimatorNeedleStart.pause()
@@ -372,8 +372,8 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 //"暂停".showToast(this)
                 it.background=  getDrawable(R.drawable.ic_play_circle_2)
                 if (mediaPlayer.isPlaying){
-
-                    mediaPlayer.pause()//暂停播放
+                    myService.pauseOrContinueMusic()
+//                    mediaPlayer.pause()//暂停播放
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                         //将isplaying设为false
@@ -386,7 +386,9 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 mAnimatorNeedleStart.start()
                 it.background=  getDrawable(R.drawable.ic_pause)
                 if (!mediaPlayer.isPlaying){
-                    mediaPlayer.start()//开始播放
+                    //mediaPlayer.start()//开始播放
+                    myService.pauseOrContinueMusic()
+
                     thread {
                         val songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
                         //val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
@@ -398,10 +400,24 @@ public class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             count++
         }
         binding.icNext.setOnClickListener {
-            "next".showToast(this)
+            myService.nextMusic()
+            if (mAnimator.isPaused){
+                mAnimatorNeedleStart.start()
+                mAnimator.start()
+                binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
+
+            }
+            //Picasso.get().load(url).fit().into(binding.imgAlbum)
         }
         binding.icBack.setOnClickListener {
-            "back".showToast(this)
+            myService.previousMusic()
+            //切歌的时候判断动画是否在转，如果在暂停状态，则开启
+            //Picasso.get().load(url).fit().into(binding.imgAlbum)
+            if (mAnimator.isPaused){
+                mAnimator.start()
+                mAnimatorNeedleStart.start()
+                binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
+            }
         }
         binding.icMode.setOnClickListener {
             "mode".showToast(this)

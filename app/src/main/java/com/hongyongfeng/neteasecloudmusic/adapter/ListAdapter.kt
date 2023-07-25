@@ -1,20 +1,13 @@
 package com.hongyongfeng.neteasecloudmusic.adapter
 
-import android.content.ClipData.Item
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.hongyongfeng.neteasecloudmusic.R
-import com.hongyongfeng.neteasecloudmusic.databinding.ItemListBinding
 import com.hongyongfeng.neteasecloudmusic.databinding.ItemSongsBinding
 import com.hongyongfeng.neteasecloudmusic.model.Detail
-import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
-import com.hongyongfeng.neteasecloudmusic.model.Songs
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.LoadMoreViewHolder
-import com.hongyongfeng.neteasecloudmusic.ui.viewholder.PlayListViewHolder
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.SongsListViewHolder
 
 class ListAdapter(private val list:List<Detail>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -29,7 +22,7 @@ class ListAdapter(private val list:List<Detail>) : RecyclerView.Adapter<Recycler
                 LayoutInflater.from(parent.context).inflate(R.layout.item_songs, parent, false)
             //println((view.findViewById(R.id.tv_title) as TextView).text)
             val binding = ItemSongsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return SongsListViewHolder(view,method,binding)
+            return SongsListViewHolder(view,method,null,null)
         }else return LoadMoreViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_load_more, parent, false))
 
     }

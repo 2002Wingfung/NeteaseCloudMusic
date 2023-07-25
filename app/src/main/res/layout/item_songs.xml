@@ -48,7 +48,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintLeft_toRightOf="@id/tv_vip"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/tv_delete"
         app:layout_constraintTop_toTopOf="@id/tv_name"
         android:text="歌手-专辑名"/>
 
@@ -60,10 +60,30 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="@id/tv_title"
         android:layout_marginStart="10dp"
-
         android:background="@drawable/ic_vip"
-
         >
-
     </TextView>
+
+
+    <TextView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="@drawable/ic_plus"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="10dp"
+
+        android:id="@+id/tv_plus"/>
+    <TextView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tv_plus"
+        android:layout_marginEnd="10dp"
+        android:id="@+id/tv_delete"
+        android:visibility="gone"
+        android:background="@drawable/ic_delete"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -19,6 +19,7 @@ import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.edit
 import com.gsls.gt.GT
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.ActivityManager
@@ -38,6 +39,7 @@ import retrofit2.Call
 import java.io.IOException
 import java.lang.Exception
 import kotlin.concurrent.thread
+import kotlin.properties.Delegates
 
 
 class MusicService : Service() {
@@ -67,7 +69,7 @@ class MusicService : Service() {
     /**
      * 记录播放的位置
      */
-    var playPosition = 0
+    private var playPosition=-1
 
     /**
      * 通知
@@ -208,6 +210,8 @@ class MusicService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e("MyService", mediaPlayer.toString())
+        mList=songDao.loadAllSongs()
+        //每次启动服务的时候是更新播放列表的时候
         val url = intent?.getStringExtra("url")
 
         if (url != null) {
@@ -217,6 +221,8 @@ class MusicService : Service() {
                 val intentBroadcastReceiver = Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
                 sendBroadcast(intentBroadcastReceiver);
+                val songDao=AppDatabase.getDatabase(this).songDao()
+                updateNotificationShow(songDao.loadId()-1)
             }, {
                 val intentBroadcastReceiver = Intent();
                 intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_PERCENT;
@@ -387,7 +393,6 @@ class MusicService : Service() {
 
         //发送通知
         //manager!!.notify(NOTIFICATION_ID, notification)
-        var bitmap:Bitmap?=null
         try {
             Picasso.get()
                 .load(mList[position].albumUrl)
@@ -395,12 +400,9 @@ class MusicService : Service() {
                 .into(object : com.squareup.picasso.Target {
                     override fun onBitmapLoaded(bitmap: Bitmap?, from: LoadedFrom?) {
                         /* Save the bitmap or do something with it here */
-
                         //Set it in the ImageView
                         remoteViews!!.setImageViewBitmap(R.id.img_album, bitmap)
-
                         manager!!.notify(NOTIFICATION_ID, notification)
-
                     }
 
                     override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
@@ -467,8 +469,11 @@ class MusicService : Service() {
      * 播放
      */
     fun play(position: Int) {
+        val prefs=getSharedPreferences("player",Context.MODE_PRIVATE)
 
-
+        prefs.edit{
+            putInt("songId",mList[position].songId.toInt())
+        }
         if (mediaPlayer == null) {
             mediaPlayer = MediaPlayer()
             //监听音乐播放完毕事件，自动下一曲
@@ -558,7 +563,10 @@ class MusicService : Service() {
      * 上一首
      */
     fun previousMusic() {
-        if (playPosition <= 0) {
+        if (playPosition==-1){
+            playPosition= ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1))?:0
+        }
+        if (playPosition == 0) {
             playPosition = mList.size - 1
         } else {
             playPosition -= 1
@@ -570,6 +578,9 @@ class MusicService : Service() {
      * 下一首
      */
     fun nextMusic() {
+        if (playPosition==-1){
+            playPosition= ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1))?:0
+        }
         mediaPlayer.reset()
         if (playPosition >= mList.size - 1) {
             playPosition = 0
@@ -593,6 +604,9 @@ class MusicService : Service() {
             thread {
                 songDao.updateIsPlaying(true, lastPlay = true)
             }
+        }
+        if (playPosition==-1){
+            playPosition= ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1))?:0
         }
         //更改通知栏播放状态
         updateNotificationShow(playPosition)

@@ -1,33 +1,29 @@
 package com.hongyongfeng.neteasecloudmusic.adapter
 
-import android.content.ClipData.Item
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.hongyongfeng.neteasecloudmusic.R
-import com.hongyongfeng.neteasecloudmusic.databinding.ItemListBinding
-import com.hongyongfeng.neteasecloudmusic.databinding.ItemSongsBinding
-import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
-import com.hongyongfeng.neteasecloudmusic.model.Songs
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
-import com.hongyongfeng.neteasecloudmusic.ui.viewholder.LoadMoreViewHolder
-import com.hongyongfeng.neteasecloudmusic.ui.viewholder.PlayListViewHolder
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.SongsListViewHolder
 
 class SongAdapter(private val list:List<Song>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private lateinit var method:(view:View,position:Int)->Unit
-    fun setOnItemClickListener(method:(view:View,position:Int)->Unit){
+    private lateinit var delete:(view:View,position:Int)->Unit
+    private lateinit var add:(view:View,position:Int)->Unit
+
+    fun setOnItemClickListener(method:(view:View,position:Int)->Unit,delete:(view:View,position:Int)->Unit,add:(view:View,position:Int)->Unit){
         this.method=method
+        this.delete=delete
+        this.add=add
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View =
             LayoutInflater.from(parent.context).inflate(R.layout.item_songs, parent, false)
-        val binding = ItemSongsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return SongsListViewHolder(view,method,binding)
+
+        return SongsListViewHolder(view,method,delete,add)
 
     }
 
@@ -50,6 +46,8 @@ class SongAdapter(private val list:List<Song>) : RecyclerView.Adapter<RecyclerVi
 //                holder.vip?.visibility=View.GONE
 //            }
             holder.vip?.visibility=View.GONE
+            holder.delete?.visibility=View.VISIBLE
+            holder.add?.visibility=View.GONE
         }
 
     }

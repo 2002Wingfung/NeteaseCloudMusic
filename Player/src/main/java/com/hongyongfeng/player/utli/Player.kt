@@ -17,12 +17,13 @@ class Player {
 
         mediaPlayer.setOnPreparedListener { mediaPlayer2 ->
 
-            listener()
+
             //发送广播
             //异步准备监听
             Log.d("myPlayer","Voice异步文件准备完成")
             Log.d("myPlayer","Voice异步文件时长"+ (mediaPlayer2.duration / 1000).toString())
             mediaPlayer2.start() //播放
+            listener()
         }
         mediaPlayer.setScreenOnWhilePlaying(true) // 设置播放的时候一直让屏幕变亮
 

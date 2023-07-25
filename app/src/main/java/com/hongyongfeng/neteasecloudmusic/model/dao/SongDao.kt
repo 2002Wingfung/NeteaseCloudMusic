@@ -49,7 +49,8 @@ interface SongDao {
     fun deleteAllSong()
 
 
-    @Query("delete from Song where name= :name")
-    fun deleteUserByName(name:String):Int
-
+    @Query("delete from Song where id= :id")
+    fun deleteSongById(id:Int)
+    @Query("update Song set id = id-1 where id >= :id")
+    fun updateSongById(id:Int)
 }

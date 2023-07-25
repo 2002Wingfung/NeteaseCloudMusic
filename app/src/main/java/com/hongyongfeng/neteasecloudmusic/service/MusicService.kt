@@ -558,11 +558,17 @@ class MusicService : Service() {
             }
             mediaPlayer.setOnPreparedListener {
                 mediaPlayer.start()
+                activityLiveData?.postValue("prepared")
                 remoteViews!!.setImageViewResource(
                     R.id.btn_notification_play,
                     R.drawable.ic_pause_blue
                 )
                 manager?.notify(NOTIFICATION_ID,notification)
+            }
+            mediaPlayer.setOnBufferingUpdateListener { mp, percent ->
+                activityLiveData?.postValue(percent.toString())
+
+
             }
             mediaPlayer.setOnErrorListener { mp, what, extra ->
                 //mediaPlayer.reset()

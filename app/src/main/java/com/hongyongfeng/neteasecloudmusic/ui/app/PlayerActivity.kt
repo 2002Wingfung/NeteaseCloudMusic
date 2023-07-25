@@ -83,15 +83,15 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         override fun onReceive(context: Context?, intent: Intent?) {
             val percent=intent?.getIntExtra("percent",-1)
             val duration= mediaPlayer.duration
-//            seekBar.max=duration
-//            seekBar.secondaryProgress = percent!!*duration/100
+            seekBar.max=duration
+            seekBar.secondaryProgress = percent!!*duration/100
         }
     }
     internal inner class ServiceBroadcastReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val duration= mediaPlayer.duration
-//            seekBar.max=duration
-//            refresh(seekBar, mediaPlayer)
+            seekBar.max=duration
+            refresh(seekBar, mediaPlayer)
         }
     }
     private fun time(time:Int):String{
@@ -300,18 +300,18 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             this@PlayerActivity, true
         ) { value ->
             when (value) {
-//                PLAY -> {
+                PLAY -> {
 //                    binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
 //                    if (mAnimator.isPaused) {
 //                        mAnimator.resume()
 //                    } else {
 //                        mAnimator.start()
 //                    }
-//                }
-//                PAUSE, CLOSE -> {
+                }
+                PAUSE, CLOSE -> {
 //                    mAnimator.pause()
 //                    binding.icPlay.setBackgroundResource(R.drawable.ic_play_circle_2)
-//                }
+                }
                 PREV -> {
                     Log.d(TAG, "上一曲")
                     runOnUiThread {
@@ -330,8 +330,19 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         Picasso.get().load(song?.albumUrl).fit().into(binding.imgAlbum)
                     }
                 }
-
-                else -> {}
+                "percent"->{
+                }
+                "prepared"->{
+                    val duration= mediaPlayer.duration
+                    seekBar.max=duration
+                    refresh(seekBar, mediaPlayer)
+                }
+                else -> {
+                    val percent=value.toInt()
+                    val duration= mediaPlayer.duration
+                    seekBar.max=duration
+                    seekBar.secondaryProgress = percent *duration/100
+                }
             }
         }
     }
@@ -515,7 +526,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     seekBar.progress = mediaPlayer.currentPosition
                 }
             }
-        },0,300)
+        },0,500)
 
     }
     override fun onDestroy() {

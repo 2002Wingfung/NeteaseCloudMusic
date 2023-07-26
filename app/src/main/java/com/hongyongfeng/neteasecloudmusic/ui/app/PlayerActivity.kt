@@ -21,6 +21,7 @@ import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.gsls.gtk.cancel
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.adapter.SongAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
@@ -32,10 +33,7 @@ import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
 import com.hongyongfeng.neteasecloudmusic.service.MusicService.Companion.mediaPlayer
-import com.hongyongfeng.neteasecloudmusic.util.ImageLoader
-import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
-import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
-import com.hongyongfeng.neteasecloudmusic.util.showToast
+import com.hongyongfeng.neteasecloudmusic.util.*
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.fragment_player.*
 import kotlinx.coroutines.Dispatchers
@@ -531,6 +529,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         prefs.edit{
                             putInt("mode",2)
                         }
+                        val max=songDao.selectMaxId().toInt()
+                        RandomNode.randomList(max,this@PlayerActivity)
                     }
                     2->{
                         //顺序
@@ -611,50 +611,17 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     private fun showBottomSheetDialog(){
         val bottomSheetDialog = BottomSheetDialog(this)
-
         bottomSheetDialog.setContentView(R.layout.layout_bottom_sheet)
-
         val clear: TextView? = bottomSheetDialog.findViewById(R.id.tv_back)
-
         val recyclerView: RecyclerView? = bottomSheetDialog.findViewById(R.id.rv_play_list)
         SetRecyclerView.setRecyclerView(
             this,
             recyclerView,
             adapter
         )
-        val upload: LinearLayout? = bottomSheetDialog.findViewById(R.id.uploadLinearLayout)
-
-        val download: LinearLayout? = bottomSheetDialog.findViewById(R.id.download)
-
-        val delete: LinearLayout? = bottomSheetDialog.findViewById(R.id.delete)
         clear!!.setOnClickListener {
-            //Toast.makeText(applicationContext, "Copy is Clicked ", Toast.LENGTH_LONG).show()
             bottomSheetDialog.dismiss()
         }
-//
-//        share!!.setOnClickListener{
-//            Toast.makeText(applicationContext, "Share is Clicked", Toast.LENGTH_LONG).show()
-//            bottomSheetDialog.dismiss()
-//        }
-//
-//        upload!!.setOnClickListener({
-//            Toast.makeText(applicationContext, "Upload is Clicked", Toast.LENGTH_LONG).show()
-//            bottomSheetDialog.dismiss()
-//        }
-//
-//        download!!.setOnClickListener(object : OnClickListener() {
-//            fun onClick(v: View?) {
-//                Toast.makeText(applicationContext, "Download is Clicked", Toast.LENGTH_LONG).show()
-//                bottomSheetDialog.dismiss()
-//            }
-//        })
-//
-//        delete!!.setOnClickListener(object : OnClickListener() {
-//            fun onClick(v: View?) {
-//                Toast.makeText(applicationContext, "Delete is Clicked", Toast.LENGTH_LONG).show()
-//                bottomSheetDialog.dismiss()
-//            }
-//        })
         bottomSheetDialog.show()
     }
     override fun onDestroy() {

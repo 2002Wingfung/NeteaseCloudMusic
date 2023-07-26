@@ -6,13 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.hongyongfeng.neteasecloudmusic.model.entity.Hot
 import com.hongyongfeng.neteasecloudmusic.model.dao.HotDao
+import com.hongyongfeng.neteasecloudmusic.model.dao.RandomDao
 import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
+import com.hongyongfeng.neteasecloudmusic.model.entity.Random
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 
-@Database(version = 1, entities = [Song::class, Hot::class])
+@Database(version = 1, entities = [Song::class, Hot::class,Random::class])
 abstract class AppDatabase :RoomDatabase(){
     abstract fun songDao():SongDao
     abstract fun hotDao(): HotDao
+    abstract fun randomDao():RandomDao
     companion object{
         private var instance:AppDatabase?=null
 

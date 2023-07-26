@@ -559,12 +559,8 @@ class MusicService : Service() {
             }
             mediaPlayer.setOnBufferingUpdateListener { mp, percent ->
                 activityLiveData?.postValue(percent.toString())
-
-
             }
             mediaPlayer.setOnErrorListener { mp, what, extra ->
-                //mediaPlayer.reset()
-                println("错误")
                 true
             }
         }
@@ -676,7 +672,14 @@ class MusicService : Service() {
             playPosition += 1
         }
         activityLiveData?.postValue(NEXT)
-        play(playPosition,2)
+        when (prefs.getInt("mode",-1)){
+            2->{
+                //在随机列表里面进行顺序播放
+            }
+            else->{
+                play(playPosition,2)
+            }
+        }
     }
 
     /**

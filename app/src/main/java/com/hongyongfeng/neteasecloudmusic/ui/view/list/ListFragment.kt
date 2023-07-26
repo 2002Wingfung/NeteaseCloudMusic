@@ -24,6 +24,7 @@ import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayListDetailedInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
+import com.hongyongfeng.neteasecloudmusic.util.RandomNode
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
@@ -31,6 +32,7 @@ import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.*
 import kotlin.concurrent.thread
 
 class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
@@ -170,6 +172,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             bundle.putString("singer",artists)
             intent.putExtras(bundle)
             startActivity(intent)
+
         }){
                 view,position->
             listSongs[position].apply {
@@ -206,4 +209,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
         lp.topMargin= dp
         binding.layoutRecently.layoutParams = lp
     }
+
+
+
 }

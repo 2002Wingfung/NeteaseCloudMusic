@@ -372,8 +372,11 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 else -> {
                     val percent=value.toInt()
                     val duration= mediaPlayer.duration
-                    seekBar.max=duration
-                    seekBar.secondaryProgress = percent *duration/100
+                    runOnUiThread {
+                        seekBar.max=duration
+                        binding.tvTotal.text=time(duration)
+                        seekBar.secondaryProgress = percent *duration/100
+                    }
                 }
             }
         }

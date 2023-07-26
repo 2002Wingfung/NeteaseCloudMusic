@@ -5,10 +5,7 @@ import LiveDataBus.BusMutableLiveData
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.*
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
@@ -53,7 +50,8 @@ class MusicService : Service() {
      */
     private lateinit var musicReceiver: MusicReceiver
     private val mBinder = MediaPlayerBinder()
-    private var isFirst = false
+    private lateinit var prefs: SharedPreferences
+
 
     /**
      * 歌曲间隔时间
@@ -195,26 +193,8 @@ class MusicService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         //TODO("Not yet implemented")
-//        isFirst=true
-//        val url=intent?.getStringExtra("url")
-//
-//        if (url != null) {
-//            Player.initMediaPlayer(url, mediaPlayer,{
-//                //在Service服务类中发送广播消息给Activity活动界面
-//                val intentBroadcastReceiver =Intent();
-//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-//                sendBroadcast(intentBroadcastReceiver);
-//            },{
-//                val intentBroadcastReceiver =Intent();
-//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-//                intentBroadcastReceiver.putExtra("percent",it)
-//                sendBroadcast(intentBroadcastReceiver);
-//            }){
-//                val intentBroadcastReceiver =Intent();
-//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_COMPLETE;
-//                sendBroadcast(intentBroadcastReceiver);
-//            }
-//        }
+        prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+
         return mBinder
     }
 
@@ -547,14 +527,26 @@ class MusicService : Service() {
             mediaPlayer = MediaPlayer()
             //监听音乐播放完毕事件，自动下一曲
             mediaPlayer.setOnCompletionListener {
-                nextMusic()
                 Log.d("MediaPlayer","播放已完成,准备播放下一首")
-
             }
         } else {
             mediaPlayer.setOnCompletionListener {
-                nextMusic()
+
                 Log.d("MediaPlayer","播放已完成,准备播放下一首")
+                when (prefs.getInt("mode",-1)) {
+                    0 -> {
+                        //顺序
+                        nextMusic()
+                    }
+                    1 -> {
+                        //重复
+                        play(playPosition, 0)
+                    }
+                    2 -> {
+                        //随机
+
+                    }
+                }
             }
             mediaPlayer.setOnPreparedListener {
                 mediaPlayer.start()

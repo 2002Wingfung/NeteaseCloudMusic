@@ -1,16 +1,14 @@
 package com.hongyongfeng.neteasecloudmusic.model.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 
 @Dao
 interface SongDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertSong(song:Song):Long
+
+
 
     @Update
     fun updateSong(newSong:Song)//注意更新和删除数据时都是基于User的id值去操作的
@@ -54,4 +52,9 @@ interface SongDao {
     fun deleteSongById(id:Int)
     @Query("update Song set id = id-1 where id >= :id")
     fun updateSongById(id:Int)
+
+    @Query("update Song set id = id+1 where id == :id")
+    fun plusSongById(id:Long)
+    @Query("select max(id) from Song")
+    fun selectMaxId():Long
 }

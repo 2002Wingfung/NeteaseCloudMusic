@@ -111,8 +111,7 @@ class RecentlyFragment: BaseFragment<FragmentRecentlyBinding, RecentlyViewModel>
             listSongs.removeAt(position)
             adapter.notifyItemRemoved(position)
         },{
-                view,position->
-            ("添加$position").showToast(mActivity)
+                _, _ ->
 
         })
     }

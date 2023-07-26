@@ -18,6 +18,7 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentListBinding
 import com.hongyongfeng.neteasecloudmusic.model.Artist
 import com.hongyongfeng.neteasecloudmusic.model.Detail
+import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
@@ -25,6 +26,7 @@ import com.hongyongfeng.neteasecloudmusic.network.api.PlayListDetailedInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
+import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +45,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
     private lateinit var mActivity: FragmentActivity
     private var listSongs= mutableListOf<Detail>()
     private var adapter= ListAdapter(listSongs)
+    private lateinit var songDao:SongDao
     override fun initFragment(
         binding: FragmentListBinding,
         viewModel: ViewModel?,
@@ -51,6 +54,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
     ) {
         this.binding=binding
         mActivity=requireActivity()
+        songDao=AppDatabase.getDatabase(mActivity).songDao()
         if (publicViewModel!=null){
             this.viewModel=publicViewModel
         }
@@ -137,7 +141,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
                 }
             }
         })
-        adapter.setOnItemClickListener{
+        adapter.setOnItemClickListener({
                 view,position->
             val songs=listSongs[position]
             val intent=Intent(mActivity, PlayerActivity::class.java)
@@ -146,12 +150,11 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             bundle.putInt("id",songs.id.toInt())
             val artistList=songs.ar
             val artists=getArtists(artistList)
-            val songDao=AppDatabase.getDatabase(mActivity).songDao()
             thread {
                 songDao.deleteAllSong()
                 songDao.clearAutoIncrease()
                 for (songs1 in listSongs){
-                    val song =Song(songs1.name,songs1.id*1L,songs1.al.id*1L,getArtists(songs1.ar))
+                    val song =Song(songs1.name,songs1.id*1L,songs1.al.id*1L,getArtists(songs1.ar), albumUrl = songs1.al.picUrl)
                     song.id=songDao.insertSong(song)
                     if(song.id-1==position*1L){
                         song.isPlaying=true
@@ -167,6 +170,24 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             bundle.putString("singer",artists)
             intent.putExtras(bundle)
             startActivity(intent)
+        }){
+                view,position->
+            listSongs[position].apply {
+                val artists=getArtists(ar)
+                val song=Song(name, id  , al.id,artists, albumUrl = al.picUrl)
+                songDao.loadLastPlayingSong().apply {
+                    song.id= ((this?.id)?.plus(1)) ?: 1
+                    if (this?.id!=null){
+                        //songDao.plusSongById(this.id.toInt()+1)
+                        val max=songDao.selectMaxId()
+                        for (mId in max downTo this.id+1){
+                            songDao.plusSongById(mId)
+                        }
+                    }
+                }
+                songDao.insertSong(song)
+                ("已添加到下一首播放").showToast(mActivity)
+            }
         }
     }
     private fun getArtists(artistList:List<Artist>?):String{

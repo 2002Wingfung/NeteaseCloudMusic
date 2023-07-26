@@ -17,12 +17,14 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentResultBinding
 import com.hongyongfeng.neteasecloudmusic.model.Artists
 import com.hongyongfeng.neteasecloudmusic.model.Songs
+import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
+import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +43,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     private lateinit var binding:FragmentResultBinding
     private lateinit var mActivity: FragmentActivity
     private lateinit var viewModel: SearchViewModel
+    private lateinit var songDao:SongDao
 
     override fun initFragment(
         binding: FragmentResultBinding,
@@ -118,7 +121,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
-
+        songDao=AppDatabase.getDatabase(mActivity).songDao()
         initView()
         SetRecyclerView.setRecyclerView(
             mActivity,
@@ -140,35 +143,35 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                         //"滑动到底部".showToast(mActivity)
                         //listSongs.add(listSongs.get(1))
 
-                        searchRequest(arguments?.getString("text")!!,page)
+                        searchRequest(arguments?.getString("text")!!, page)
                         page++
 //                        Handler().post {
 //                            adapter.notifyItemChanged(listSongs.size - 1)
 //                        }
 
                     }
-                }else{
+                } else {
                     val view = recyclerView.getChildAt(recyclerView.childCount - 1)
                     if (view != null) {
                         val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
                         bar.visibility = View.GONE
                         val tv = view.findViewById<TextView>(R.id.tv_load)
-                        tv.text="没有更多内容了"
+                        tv.text = "没有更多内容了"
                     }
                 }
             }
         })
-        adapter.setOnItemClickListener { view, position ->
+        adapter.setOnItemClickListener({ view, position ->
 
-            val songs=listSongs[position]
-            val intent=Intent(mActivity, PlayerActivity::class.java)
-            val bundle=Bundle()
-            bundle.putString("name",songs.name)
-            bundle.putInt("id",songs.id)
+            val songs = listSongs[position]
+            val intent = Intent(mActivity, PlayerActivity::class.java)
+            val bundle = Bundle()
+            bundle.putString("name", songs.name)
+            bundle.putInt("id", songs.id)
 //            val prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
 
-            val artistList=songs.getArtists()
-            val artists=getArtists(artistList)
+            val artistList = songs.getArtists()
+            val artists = getArtists(artistList)
 //            prefs.edit{
 //                putInt("lastSongId",songs.id)
 //
@@ -177,41 +180,62 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
 //            }
             //先保存到数据库，然后再跳转Activity
 
-            val songDao=AppDatabase.getDatabase(mActivity).songDao()
             thread {
                 songDao.deleteAllSong()
                 songDao.clearAutoIncrease()
-                for (songs1 in listSongs){
-                    val song =Song(songs1.name,songs1.id*1L,songs1.getAlbum()!!.id*1L,getArtists(songs1.getArtists()))
-                    song.id=songDao.insertSong(song)
-                    if(song.id-1==position*1L){
-                        song.isPlaying=true
+                for (songs1 in listSongs) {
+                    val song = Song(
+                        songs1.name,
+                        songs1.id * 1L,
+                        songs1.getAlbum()!!.id * 1L,
+                        getArtists(songs1.getArtists())
+                    )
+                    song.id = songDao.insertSong(song)
+                    if (song.id - 1 == position * 1L) {
+                        song.isPlaying = true
                         //以下使得lastPlaying为true的代码要在service中切歌的时候再写一遍
-                        song.lastPlaying=true
+                        song.lastPlaying = true
                         songDao.updateSong(song)
                     }
                 }
             }
-            val albumId=songs.getAlbum()!!.id
-            bundle.putInt("albumId",albumId)
-            bundle.putInt("position",position)
-            bundle.putString("singer",artists)
+            val albumId = songs.getAlbum()!!.id
+            bundle.putInt("albumId", albumId)
+            bundle.putInt("position", position)
+            bundle.putString("singer", artists)
             //bundle 传递数据库的list，而不是retrofit返回的list，记得看怎么序列化
             intent.putExtras(bundle)
             startActivity(intent)
 
+        }) { view, position ->
+
+            listSongs[position].apply {
+                val artists = this@ResultFragment.getArtists(getArtists())
+                val song = Song(name, id.toLong(), getAlbum()?.id?.toLong()?:0, artists)
+                songDao.loadLastPlayingSong().apply {
+                    song.id = ((this?.id)?.plus(1)) ?: 1
+                    if (this?.id != null) {
+                        val max = songDao.selectMaxId()
+                        for (mId in max downTo this.id + 1) {
+                            songDao.plusSongById(mId)
+                        }
+                    }
+                }
+                songDao.insertSong(song)
+                ("已添加到下一首播放").showToast(mActivity)
+            }
         }
+
     }
-    private fun getArtists(artistList:List<Artists>?):String{
-        val artists=java.lang.StringBuilder()
-        for (artist in artistList!!){
-            if (artist == artistList[artistList.size-1]){
+    private fun getArtists(artistList: List<Artists>?): String {
+        val artists = java.lang.StringBuilder()
+        for (artist in artistList!!) {
+            if (artist == artistList[artistList.size - 1]) {
                 artists.append(artist.name)
-            }else{
+            } else {
                 artists.append(artist.name).append("/")
             }
         }
         return artists.toString()
     }
 }
-

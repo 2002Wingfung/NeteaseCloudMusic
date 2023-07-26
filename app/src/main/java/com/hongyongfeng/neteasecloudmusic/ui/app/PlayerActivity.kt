@@ -591,7 +591,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             adapter.notifyItemRemoved(position)
         },{
                 view,position->
-            ("添加$position").showToast(this)
+            ("已添加到下一首播放").showToast(this)
 
         })
     }

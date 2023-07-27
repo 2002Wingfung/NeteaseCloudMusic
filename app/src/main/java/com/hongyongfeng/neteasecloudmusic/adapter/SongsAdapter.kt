@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.R
-import com.hongyongfeng.neteasecloudmusic.databinding.ItemSongsBinding
 import com.hongyongfeng.neteasecloudmusic.model.Songs
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.LoadMoreViewHolder
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.SongsListViewHolder
@@ -14,22 +13,17 @@ class SongsAdapter(private val list:List<Songs>) : RecyclerView.Adapter<Recycler
 
     private lateinit var method:(view:View,position:Int)->Unit
     private lateinit var add:(view:View,position:Int)->Unit
-
     fun setOnItemClickListener(method:(view:View,position:Int)->Unit,add:(view:View,position:Int)->Unit){
         this.method=method
         this.add=add
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        if (viewType!=-1){
+        return if (viewType!=-1){
             val view: View =
                 LayoutInflater.from(parent.context).inflate(R.layout.item_songs, parent, false)
-            //println((view.findViewById(R.id.tv_title) as TextView).text)
-            val binding = ItemSongsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return SongsListViewHolder(view,method,null,add)
-        }else return LoadMoreViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_load_more, parent, false))
-
+            SongsListViewHolder(view,method,null,add)
+        }else LoadMoreViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_load_more, parent, false))
     }
-
     override fun getItemCount(): Int=list.size+1
 
     override fun getItemViewType(position: Int): Int {
@@ -63,6 +57,5 @@ class SongsAdapter(private val list:List<Songs>) : RecyclerView.Adapter<Recycler
                 holder.vip?.visibility=View.GONE
             }
         }
-
     }
 }

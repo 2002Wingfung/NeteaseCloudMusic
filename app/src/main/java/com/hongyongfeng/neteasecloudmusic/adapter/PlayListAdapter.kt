@@ -1,22 +1,17 @@
 package com.hongyongfeng.neteasecloudmusic.adapter
 
-import android.content.ClipData.Item
 import android.content.Context
 import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.core.content.edit
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.databinding.ItemListBinding
 import com.hongyongfeng.neteasecloudmusic.model.PlayList
-import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.PlayListViewHolder
 import com.hongyongfeng.neteasecloudmusic.util.MyApplication
 import com.squareup.picasso.Picasso
-import kotlin.properties.Delegates
 
 class PlayListAdapter(private val list:List<PlayList>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -52,10 +47,7 @@ class PlayListAdapter(private val list:List<PlayList>) : RecyclerView.Adapter<Re
         }else{
             bean.trackCount.toString()+"首,by ${bean.creator.nickname}"
         }
-
         holder.amount?.text=description
         Picasso.get().load(bean.coverImgUrl).fit().into(holder.img)
-
-
     }
 }

@@ -1,8 +1,8 @@
 package com.hongyongfeng.neteasecloudmusic.base
-/*
+
 abstract class BaseViewModel<out M : BaseModel<BaseViewModel<M,*>,*>,  CONTRACT> :
     Base<CONTRACT>() {
-    var mModel: M
+    var mModel: @UnsafeVariance M
 
     init {
         mModel = modelInstance
@@ -10,4 +10,3 @@ abstract class BaseViewModel<out M : BaseModel<BaseViewModel<M,*>,*>,  CONTRACT>
 
     abstract val modelInstance: M
 }
-*/

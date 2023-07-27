@@ -105,6 +105,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
                             val songsList=it.response.songs
                             if (songsList.isNotEmpty()){
                                 listSongs.addAll(songsList)
+                                isScroll=false
                             }else{
                                 val view = recyclerView.getChildAt(recyclerView.childCount - 1)
                                 if (view != null) {
@@ -112,6 +113,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
                                     bar.visibility = View.GONE
                                     val tv = view.findViewById<TextView>(R.id.tv_load)
                                     tv.text="没有更多内容了"
+                                    isScroll=true
                                 }
                             }
                             adapter.notifyItemChanged(listSongs.size)
@@ -121,32 +123,42 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             }
         }
     }
-
+    var isScroll=false
+    private lateinit var mView:View
     override fun initListener() {
         binding.tvBack.setOnClickListener {
             mActivity.onBackPressed()
         }
-        var isScroll=false
+
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (!isScroll) {
-                    if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
-                        if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
+                if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
+                    if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
+
+                        mView = recyclerView.getChildAt(recyclerView.childCount - 1)
+                        if (!isScroll){
+                            val bar = mView.findViewById<ProgressBar>(R.id.progress_bar)
+                            bar.visibility = View.VISIBLE
+                            val tv = mView.findViewById<TextView>(R.id.tv_load)
+                            tv.text = "正在加载更多内容"
                             listRequest(arguments?.getLong("id")!!, page)
                             page++
-                        }
-                    } else {
-                        val view = recyclerView.getChildAt(recyclerView.childCount - 1)
-                        if (view != null) {
-                            val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
+                        }else{
+                            val bar = mView.findViewById<ProgressBar>(R.id.progress_bar)
                             bar.visibility = View.GONE
-                            val tv = view.findViewById<TextView>(R.id.tv_load)
+                            val tv = mView.findViewById<TextView>(R.id.tv_load)
                             tv.text = "没有更多内容了"
-                            isScroll = true
                         }
+
                     }
+                } else {
+                    mView = recyclerView.getChildAt(recyclerView.childCount - 1)
+                    val bar = mView.findViewById<ProgressBar>(R.id.progress_bar)
+                    bar.visibility = View.GONE
+                    val tv = mView.findViewById<TextView>(R.id.tv_load)
+                    tv.text = "没有更多内容了"
                 }
             }
         })

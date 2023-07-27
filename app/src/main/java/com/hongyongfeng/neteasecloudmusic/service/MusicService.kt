@@ -1,7 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.service
 
-import LiveDataBus
-import LiveDataBus.BusMutableLiveData
+import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus
+import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus.BusMutableLiveData
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.*
@@ -37,7 +37,7 @@ import retrofit2.Call
 import java.io.IOException
 import kotlin.concurrent.thread
 
-
+@SuppressLint()
 class MusicService : LifecycleService()  {
     /**
      * 通知栏视图
@@ -50,11 +50,6 @@ class MusicService : LifecycleService()  {
     private lateinit var musicReceiver: MusicReceiver
     private val mBinder = MediaPlayerBinder()
     private lateinit var prefs: SharedPreferences
-
-    /**
-     * 歌曲间隔时间
-     */
-    private val INTERNAL_TIME = 1000
 
     /**
      * 歌曲列表
@@ -755,9 +750,6 @@ class MusicService : LifecycleService()  {
      * 关闭音乐通知栏
      */
     fun closeNotification() {
-//        if (mediaPlayer.isPlaying) {
-//            mediaPlayer.pause()
-//        }
         manager!!.cancel(NOTIFICATION_ID)
         activityLiveData?.postValue(CLOSE)
     }

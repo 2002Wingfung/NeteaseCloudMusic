@@ -22,9 +22,7 @@ class SongAdapter(private val list:List<Song>) : RecyclerView.Adapter<RecyclerVi
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val view: View =
             LayoutInflater.from(parent.context).inflate(R.layout.item_songs, parent, false)
-
         return SongsListViewHolder(view,method,delete,add)
-
     }
 
     override fun getItemCount(): Int=list.size
@@ -38,17 +36,11 @@ class SongAdapter(private val list:List<Song>) : RecyclerView.Adapter<RecyclerVi
         if (list.isNotEmpty()&&position<list.size){
             holder as SongsListViewHolder
             val bean :Song= list[position]
-
             holder.title?.text = bean.artist
             holder.name?.text=bean.name
-//            val fee=bean.fee
-//            if (fee==0 ||fee==8) {
-//                holder.vip?.visibility=View.GONE
-//            }
             holder.vip?.visibility=View.GONE
             holder.delete?.visibility=View.VISIBLE
             holder.add?.visibility=View.GONE
         }
-
     }
 }

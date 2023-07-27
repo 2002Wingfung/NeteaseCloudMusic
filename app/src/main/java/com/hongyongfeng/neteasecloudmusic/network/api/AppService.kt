@@ -8,8 +8,6 @@ import retrofit2.http.*
 
 interface AppService {
     @GET("search/hot/detail")
-    //@GET("abc.json")
-    //fun getAppData(): retrofit2.Call<List<Hot>>
     fun getAppData(): retrofit2.Call<HotData>
     @GET("search/hot/detail")
     fun getResponseBody(): retrofit2.Call<ResponseBody>

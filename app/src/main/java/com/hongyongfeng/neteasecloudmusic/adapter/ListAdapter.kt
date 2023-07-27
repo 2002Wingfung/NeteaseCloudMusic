@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.R
-import com.hongyongfeng.neteasecloudmusic.databinding.ItemSongsBinding
 import com.hongyongfeng.neteasecloudmusic.model.Detail
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.LoadMoreViewHolder
 import com.hongyongfeng.neteasecloudmusic.ui.viewholder.SongsListViewHolder
@@ -42,7 +41,6 @@ class ListAdapter(private val list:List<Detail>) : RecyclerView.Adapter<Recycler
         if (list.isNotEmpty()&&position<list.size){
             holder as SongsListViewHolder
             val bean :Detail= list[position]
-            //println(holder.amount?.text)
             val artists=java.lang.StringBuilder()
             val artistList=bean.ar
             for (artist in artistList){
@@ -57,6 +55,5 @@ class ListAdapter(private val list:List<Detail>) : RecyclerView.Adapter<Recycler
             holder.name?.text=bean.name
             holder.vip?.visibility=View.GONE
         }
-
     }
 }

@@ -1,8 +1,6 @@
 package com.hongyongfeng.neteasecloudmusic.model.entity
 
-import android.graphics.Bitmap
 import androidx.room.*
-
 
 @Entity
 data class Random(@ColumnInfo(name = "song_id") var songId:Long)

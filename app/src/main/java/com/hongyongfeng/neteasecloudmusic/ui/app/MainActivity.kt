@@ -1,7 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
-import LiveDataBus
-import LiveDataBus.BusMutableLiveData
+import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus
+import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.*
@@ -322,6 +322,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             imgButton.setIconResource(R.drawable.ic_play_circle_2)
             musicService!!.pauseOrContinueMusic()
             logoAnimation.pause()
+            songDao.updateIsPlayingBySelf(false)
         }else{
             imgButton.setIconResource(R.drawable.ic_pause)
 

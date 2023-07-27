@@ -1,7 +1,7 @@
 package com.hongyongfeng.neteasecloudmusic.ui.app
 
-import LiveDataBus
-import LiveDataBus.BusMutableLiveData
+import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus
+import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
 import android.content.*
 import android.media.MediaPlayer
@@ -628,14 +628,15 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         bottomSheetDialog.show()
     }
     override fun onDestroy() {
-        super.onDestroy()
+        if (::timer.isInitialized){
+            timer.cancel()
+        }
+
         Log.e("MyPlayerActivity","onDestroy")
         val intent = Intent(this@PlayerActivity, MusicService::class.java)
 
         stopService(intent)
         unbindService(mServiceConnection)
-        if (::timer.isInitialized){
-            timer.cancel()
-        }
+        super.onDestroy()
     }
 }

@@ -1,7 +1,6 @@
 package com.hongyongfeng.neteasecloudmusic.network.api
 
 import com.hongyongfeng.neteasecloudmusic.model.PlayListDetail
-import com.hongyongfeng.neteasecloudmusic.network.res.SongData
 import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Query

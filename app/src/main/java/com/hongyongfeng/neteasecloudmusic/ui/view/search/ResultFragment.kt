@@ -104,6 +104,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                                     bar.visibility = View.GONE
                                     val tv = view.findViewById<TextView>(R.id.tv_load)
                                     tv.text="没有更多内容了"
+                                    isScroll=true
                                 }
                             }
                             adapter.notifyItemChanged(listSongs.size)
@@ -135,25 +136,28 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             adapter
         )
     }
+    var isScroll=false
     override fun initListener() {
-        var isScroll=false
 
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (!isScroll) {
                     if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
                         if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
-                            //一下代码全都需要改变
-                            //"滑动到底部".showToast(mActivity)
-                            //listSongs.add(listSongs.get(1))
-
-                            searchRequest(arguments?.getString("text")!!, page)
-                            page++
-//                        Handler().post {
-//                            adapter.notifyItemChanged(listSongs.size - 1)
-//                        }
-
+                            val mView = recyclerView.getChildAt(recyclerView.childCount - 1)
+                            if (!isScroll){
+                                val bar = mView.findViewById<ProgressBar>(R.id.progress_bar)
+                                bar.visibility = View.VISIBLE
+                                val tv = mView.findViewById<TextView>(R.id.tv_load)
+                                tv.text = "正在加载更多内容"
+                                searchRequest(arguments?.getString("text")!!, page)
+                                page++
+                            }else{
+                                val bar = mView.findViewById<ProgressBar>(R.id.progress_bar)
+                                bar.visibility = View.GONE
+                                val tv = mView.findViewById<TextView>(R.id.tv_load)
+                                tv.text = "没有更多内容了"
+                            }
                         }
                     } else {
                         val view = recyclerView.getChildAt(recyclerView.childCount - 1)
@@ -162,11 +166,9 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                             bar.visibility = View.GONE
                             val tv = view.findViewById<TextView>(R.id.tv_load)
                             tv.text = "没有更多内容了"
-                            isScroll=true
                         }
                     }
                 }
-            }
         })
         adapter.setOnItemClickListener({ view, position ->
 

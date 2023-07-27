@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -17,17 +16,13 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.navigation.NavigationView
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.adapter.PlayListAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentMainBinding
 import com.hongyongfeng.neteasecloudmusic.model.PlayList
-import com.hongyongfeng.neteasecloudmusic.model.PlayListBean
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayListInterface
-import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
-import com.hongyongfeng.neteasecloudmusic.ui.view.player.PlayerFragment
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel

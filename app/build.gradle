@@ -68,7 +68,6 @@ dependencies {
     //使用 gt-DataBinding 才需要添加以下注册,否则可以不添加
     kapt 'com.github.1079374315:GSLS_Tool:v1.4.4.5'//注册 gt-DataBinding 功能
     implementation 'com.guolindev.permissionx:permissionx:1.7.1'
-    implementation "androidx.lifecycle:lifecycle-service:2.6.1"
     implementation project(':Player')
     implementation 'com.jakewharton:disklrucache:2.0.2'
     implementation "androidx.room:room-runtime:2.4.2"

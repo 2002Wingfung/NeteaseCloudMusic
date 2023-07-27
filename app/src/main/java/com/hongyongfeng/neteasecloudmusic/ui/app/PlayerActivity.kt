@@ -7,9 +7,7 @@ import android.content.*
 import android.media.MediaPlayer
 import android.os.*
 import android.util.Log
-import android.view.View
 import android.view.animation.LinearInterpolator
-import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.TextView
@@ -21,7 +19,6 @@ import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.gsls.gtk.cancel
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.adapter.SongAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
@@ -53,6 +50,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
      */
     private var activityLiveData: BusMutableLiveData<String>? = null
     private var albumId: Int=0
+
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
@@ -66,9 +64,9 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private lateinit var songDao:SongDao
 
     /**
-     * 当在Activity中做出播放状态的改变时，通知做出相应改变
+     * 当在Activity中做出播放模式的改变时，通知做出相应改变
      */
-    private var notificationLiveData: LiveDataBus.BusMutableLiveData<String>? = null
+    private var modeLiveData: BusMutableLiveData<String>? = null
     private lateinit var myService: MusicService
     companion object {
         const val ACTION_SERVICE_PERCENT: String="action.percent"
@@ -220,9 +218,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }else
             {
                 Log.e("MyPlayerActivity","是同一首歌")
-
-                //if (::mediaPlayer.isInitialized){
-
                 val status=bundle.getInt("status")
                 if (status!=-1){
                     if (!mediaPlayer.isPlaying){
@@ -237,7 +232,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             count++
                             runOnUiThread{
                                 handler.sendEmptyMessageDelayed(0, 700)
-
                                 val duration=mediaPlayer.duration
                                 seekBar.max= duration
 
@@ -315,7 +309,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             seekBar.max=mediaPlayer.duration
             refresh(seekBar, mediaPlayer)
         }
-        notificationLiveData=LiveDataBus.instance.with("notification_control",String::class.java)
+        modeLiveData=LiveDataBus.instance.with("mode_control",String::class.java)
     }
     /**
      * 通知栏动作观察者
@@ -412,6 +406,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             binding.tvTotal.text=time(it.response.data[0].time)
                             //Log.e("serviceMusic","Start")
                             intent.putExtra("position",position)
+                            Log.e("playerposition",position.toString())
                             startService(intent)
                             //val songDao=AppDatabase.getDatabase(this@PlayerActivity).songDao()
                             //myService.updateNotificationShow(songDao.loadId()-1)
@@ -483,12 +478,10 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 mAnimatorNeedleStart.start()
                 it.background = getDrawable(R.drawable.ic_pause)
                 if (!mediaPlayer.isPlaying){
-                    //mediaPlayer.start()//开始播放
+                    //开始播放
                     myService.pauseOrContinueMusic()
                     thread {
-                        //val prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
                         songDao.updateIsPlaying(true, lastPlay = true)
-                        //将isplaying设为true
                     }
                 }
             }
@@ -531,6 +524,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         }
                         val max=songDao.selectMaxId().toInt()
                         RandomNode.randomList(max,this@PlayerActivity)
+                        modeLiveData?.postValue(RANDOM)
+
                     }
                     2->{
                         //顺序
@@ -538,6 +533,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         prefs.edit{
                             putInt("mode",0)
                         }
+                        modeLiveData?.postValue(ORDER)
                     }
                 }
                 count1++

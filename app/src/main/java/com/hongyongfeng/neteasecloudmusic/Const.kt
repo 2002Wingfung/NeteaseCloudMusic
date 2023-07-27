@@ -33,5 +33,7 @@ const val CLOSE = "close"
  * 进度变化
  */
 const val PROGRESS = "progress"
+const val RANDOM = "random"
+const val ORDER = "order"
 
 const val TAG = "MusicReceiver"

@@ -33,14 +33,15 @@ class RandomNode {
                 }
             }
             val randomDao= AppDatabase.getDatabase(context ).randomDao()
-
+            randomDao.deleteAllRandom()
+            randomDao.clearAutoIncrease()
             for (i in arr.indices) {
                 println(arr[i])
 
                 randomDao.insert(arr[i])
             }
             randomDao.loadAllRandom().forEach{
-                Log.e("random",it.toString())
+                Log.e("random",it.toString()+"id=${it.id}")
             }
         }
     }

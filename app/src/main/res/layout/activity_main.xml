@@ -63,7 +63,7 @@
             android:paddingRight="12dp"
             android:layout_marginEnd="10dp"
             android:singleLine="true"
-            android:text="Good Music"
+            android:text="欢迎使用音乐播放器"
             android:textColor="@color/black"
             android:textSize="16sp" />
         <RelativeLayout

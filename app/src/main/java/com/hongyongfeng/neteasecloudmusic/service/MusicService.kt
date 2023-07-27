@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
+import androidx.lifecycle.*
 import com.gsls.gt.GT
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.ActivityManager
@@ -28,8 +29,6 @@ import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.RequestBuilder
 import com.hongyongfeng.neteasecloudmusic.network.api.PlayerInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.MainActivity
-import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
-import com.hongyongfeng.player.utli.Player
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Picasso.LoadedFrom
 import kotlinx.coroutines.*
@@ -39,7 +38,7 @@ import java.io.IOException
 import kotlin.concurrent.thread
 
 
-class MusicService : Service() {
+class MusicService : LifecycleService() , LifecycleOwner {
     /**
      * 通知栏视图
      */
@@ -155,17 +154,27 @@ class MusicService : Service() {
         registerReceiver(musicReceiver, intentFilter)
     }
 
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         super.onCreate()
         activityLiveData = LiveDataBus.instance.with("activity_control", String::class.java)
 
         initRemoteViews()
-
+        activityObserver()
         //注册动态广播
         registerMusicReceiver();
         initNotification()
-        mList = songDao.loadAllSongs()
+        prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+
+        mList = when(prefs.getInt("mode",-1)){
+            2->{
+                randomDao.loadAllRandomSong()
+            }
+            else->{
+                songDao.loadAllSongs()
+            }
+        }
 
         //showGtNotification()
     }
@@ -191,18 +200,43 @@ class MusicService : Service() {
         GT.GT_Notification.startNotification(builder, 222)
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        //TODO("Not yet implemented")
-        prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+    /**
+     * Activity的观察者
+     */
+    private fun activityObserver() {
+        modeLiveData =
+            LiveDataBus.instance.with("mode_control", String::class.java)
+        modeLiveData!!.observe(this@MusicService
+        ) { value -> //UI控制
+            when (value) {
+                ORDER -> {
+                    mList = songDao.loadAllSongs()
+                    //还要根据lastPlaying的id更新一下当前的playingPosition
+                }
+                RANDOM -> {
+                    mList = randomDao.loadAllRandomSong()
+                    //还要根据lastPlaying的id更新一下当前的playingPosition
+                }
+            }
+        }
+    }
 
+    override fun onBind(intent: Intent): IBinder {
+        super.onBind(intent)
         return mBinder
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.e("MyService", mediaPlayer.toString())
-        mList = songDao.loadAllSongs()
+        mList = when(prefs.getInt("mode",-1)){
+            2->{
+                randomDao.loadAllRandomSong()
+            }
+            else->{
+                songDao.loadAllSongs()
+            }
+        }
         //每次启动服务的时候是更新播放列表的时候
-        val url = intent?.getStringExtra("url")
 
         val position=intent?.getIntExtra("position",-1)
 //        if (url != null) {
@@ -500,7 +534,12 @@ class MusicService : Service() {
     }
 
     private val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
+    private val randomDao = AppDatabase.getDatabase(this@MusicService).randomDao()
 
+    /**
+     * Activity通知Service进行数据库的更新
+     */
+    private var modeLiveData: BusMutableLiveData<String>? = null
     private val requestBuilder = RequestBuilder()
     private fun <T> getAPI(apiType: Class<T>): T = requestBuilder.getAPI(apiType)
 
@@ -518,8 +557,10 @@ class MusicService : Service() {
      * 播放
      */
     fun play(position: Int,status:Int) {
-        val prefs = getSharedPreferences("player", Context.MODE_PRIVATE)
 
+        if (mList.isEmpty()){
+            return
+        }
         prefs.edit {
             putInt("songId", mList[position].songId.toInt())
         }
@@ -531,7 +572,6 @@ class MusicService : Service() {
             }
         } else {
             mediaPlayer.setOnCompletionListener {
-
                 Log.d("MediaPlayer","播放已完成,准备播放下一首")
                 when (prefs.getInt("mode",-1)) {
                     0 -> {
@@ -544,7 +584,7 @@ class MusicService : Service() {
                     }
                     2 -> {
                         //随机
-
+                        nextMusic()
                     }
                 }
             }
@@ -565,7 +605,14 @@ class MusicService : Service() {
             }
         }
         //播放时 获取当前歌曲列表是否有歌曲
-        mList = songDao.loadAllSongs()
+//        mList = when(prefs.getInt("mode",-1)){
+//            2->{
+//                randomDao.loadAllRandomSong()
+//            }
+//            else->{
+//                songDao.loadAllSongs()
+//            }
+//        }
         if (mList.isEmpty()) {
             return
         }
@@ -672,14 +719,15 @@ class MusicService : Service() {
             playPosition += 1
         }
         activityLiveData?.postValue(NEXT)
-        when (prefs.getInt("mode",-1)){
-            2->{
-                //在随机列表里面进行顺序播放
-            }
-            else->{
-                play(playPosition,2)
-            }
-        }
+//        when (prefs.getInt("mode",-1)){
+//            2->{
+//                //在随机列表里面进行顺序播放
+//            }
+//            else->{
+//                play(playPosition,2)
+//            }
+//        }
+        play(playPosition,2)
     }
 
     /**

@@ -22,6 +22,7 @@ import com.gsls.gtk.log
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
+import com.hongyongfeng.neteasecloudmusic.model.dao.RandomDao
 import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.service.MusicService
@@ -117,30 +118,35 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }
             val lastSong=songDao.loadLastPlayingSong()
             if (lastSong!=null){
-                val text=lastSong.name+" - "+lastSong.artist
-                binding.tvSongName.text=text
-                var url=lastSong.albumUrl
-                if (url.isNullOrEmpty()){
-                    //请求网络获取专辑图片url
-                    //这个要改
-                    url="网络请求获得的url"
+                if (lastSong.name.isEmpty()||lastSong.artist.isEmpty()){
+                    binding.tvSongName.text="欢迎使用音乐播放器"
+                }else{
+                    val text=lastSong.name+" - "+lastSong.artist
+                    binding.tvSongName.text=text
+                    var url=lastSong.albumUrl
+                    if (url.isNullOrEmpty()){
+                        //请求网络获取专辑图片url
+                        //这个要改
+                        url="网络请求获得的url"
+                    }
+                    runOnUiThread{
+                        //到时候要把加载图片的代码放到判断是否最后一首歌的方法中
+                        Picasso.get().load(url).fit().into(binding.ivLogo)
+                    }
                 }
-                runOnUiThread{
-                    //到时候要把加载图片的代码放到判断是否最后一首歌的方法中
-                    Picasso.get().load(url).fit().into(binding.ivLogo)
-                }
-
             }
 
         }
     }
 
     private lateinit var songDao:SongDao
+    private lateinit var randomDao:RandomDao
     /**
      * 通知栏动作观察者
      */
     private fun notificationObserver() {
         songDao=AppDatabase.getDatabase(this).songDao()
+        randomDao=AppDatabase.getDatabase(this).randomDao()
         activityLiveData = LiveDataBus.instance.with("activity_control", String::class.java)
         activityLiveData!!.observe(this@MainActivity, true
         ) { value ->
@@ -219,9 +225,16 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         super.onStart()
         Log.e("Main","start")
         val song=songDao.loadLastPlayingSong()
-        val text=song?.name+" - "+song?.artist
-        binding.tvSongName.text=text
-        Picasso.get().load(song?.albumUrl).fit().into(binding.ivLogo)
+        if (song != null) {
+            if (song.name.isEmpty()||song.artist.isEmpty()){
+                binding.tvSongName.text="欢迎使用音乐播放器"
+            }else{
+                val text= song.name +" - "+ song.artist
+                binding.tvSongName.text=text
+                Picasso.get().load(song.albumUrl).fit().into(binding.ivLogo)
+            }
+        }
+
         if (MusicService.mediaPlayer.isPlaying){
             if (logoAnimation.isPaused){
                 logoAnimation.resume()
@@ -295,7 +308,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
     private lateinit var imgButton: MaterialButton
     fun onClick(view: View) {
         //"播放".showToast(this)
-        val songDao=AppDatabase.getDatabase(this).songDao()
         val id=songDao.loadId()
         if (counts%2!=0){
             imgButton.setIconResource(R.drawable.ic_play_circle_2)
@@ -320,8 +332,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         counts++
 
         thread {
-            for (song in songDao.loadAllSongs()){
+            for (song in randomDao.loadAllRandomSong()){
                 Log.e("MainActivity",song.toString()+"id:${song.id}")
+            }
+            for (random in randomDao.loadAllRandom()){
+                Log.e("MainActivity",random.toString()+"id:${random.id}")
             }
         }
     }

@@ -2,6 +2,7 @@ package com.hongyongfeng.neteasecloudmusic.ui.view.search
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -17,12 +18,14 @@ import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentResultBinding
 import com.hongyongfeng.neteasecloudmusic.model.Artists
 import com.hongyongfeng.neteasecloudmusic.model.Songs
+import com.hongyongfeng.neteasecloudmusic.model.dao.RandomDao
 import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.SearchInterface
 import com.hongyongfeng.neteasecloudmusic.ui.app.PlayerActivity
+import com.hongyongfeng.neteasecloudmusic.util.RandomNode
 import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
@@ -44,6 +47,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     private lateinit var mActivity: FragmentActivity
     private lateinit var viewModel: SearchViewModel
     private lateinit var songDao:SongDao
+    private lateinit var randomDao: RandomDao
 
     override fun initFragment(
         binding: FragmentResultBinding,
@@ -121,7 +125,9 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
+        prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
         songDao=AppDatabase.getDatabase(mActivity).songDao()
+        randomDao=AppDatabase.getDatabase(mActivity).randomDao()
         initView()
         SetRecyclerView.setRecyclerView(
             mActivity,
@@ -130,33 +136,34 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         )
     }
     override fun initListener() {
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-            }
+        var isScroll=false
 
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-                if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
-                    if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
-                        //一下代码全都需要改变
-                        //"滑动到底部".showToast(mActivity)
-                        //listSongs.add(listSongs.get(1))
+                if (!isScroll) {
+                    if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
+                        if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
+                            //一下代码全都需要改变
+                            //"滑动到底部".showToast(mActivity)
+                            //listSongs.add(listSongs.get(1))
 
-                        searchRequest(arguments?.getString("text")!!, page)
-                        page++
+                            searchRequest(arguments?.getString("text")!!, page)
+                            page++
 //                        Handler().post {
 //                            adapter.notifyItemChanged(listSongs.size - 1)
 //                        }
 
-                    }
-                } else {
-                    val view = recyclerView.getChildAt(recyclerView.childCount - 1)
-                    if (view != null) {
-                        val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
-                        bar.visibility = View.GONE
-                        val tv = view.findViewById<TextView>(R.id.tv_load)
-                        tv.text = "没有更多内容了"
+                        }
+                    } else {
+                        val view = recyclerView.getChildAt(recyclerView.childCount - 1)
+                        if (view != null) {
+                            val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
+                            bar.visibility = View.GONE
+                            val tv = view.findViewById<TextView>(R.id.tv_load)
+                            tv.text = "没有更多内容了"
+                            isScroll=true
+                        }
                     }
                 }
             }
@@ -183,6 +190,8 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             thread {
                 songDao.deleteAllSong()
                 songDao.clearAutoIncrease()
+                //randomDao.deleteAllRandom()
+                //randomDao.clearAutoIncrease()
                 for (songs1 in listSongs) {
                     val song = Song(
                         songs1.name,
@@ -198,15 +207,25 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                         songDao.updateSong(song)
                     }
                 }
+                if (prefs.getInt("mode",-1)==2){
+                    val max=songDao.selectMaxId().toInt()
+                    RandomNode.randomList(max,mActivity)
+                    bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
+                }else{
+                    bundle.putInt("position",position)
+                }
+                val albumId = songs.getAlbum()!!.id
+                bundle.putInt("albumId", albumId)
+                if (prefs.getInt("mode",-1)==2) {
+                    bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
+                }else{
+                    bundle.putInt("position",position)
+                }
+                bundle.putString("singer", artists)
+                //bundle 传递数据库的list，而不是retrofit返回的list，记得看怎么序列化
+                intent.putExtras(bundle)
+                startActivity(intent)
             }
-            val albumId = songs.getAlbum()!!.id
-            bundle.putInt("albumId", albumId)
-            bundle.putInt("position", position)
-            bundle.putString("singer", artists)
-            //bundle 传递数据库的list，而不是retrofit返回的list，记得看怎么序列化
-            intent.putExtras(bundle)
-            startActivity(intent)
-
         }) { view, position ->
 
             listSongs[position].apply {
@@ -227,6 +246,8 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         }
 
     }
+    private lateinit var prefs: SharedPreferences
+
     private fun getArtists(artistList: List<Artists>?): String {
         val artists = java.lang.StringBuilder()
         for (artist in artistList!!) {

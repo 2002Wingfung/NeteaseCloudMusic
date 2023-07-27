@@ -39,6 +39,13 @@ import kotlin.concurrent.thread
 
 @SuppressLint()
 class MusicService : LifecycleService()  {
+    private val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
+    private val randomDao = AppDatabase.getDatabase(this@MusicService).randomDao()
+    /**
+     * Activity通知Service进行数据库的更新
+     */
+    private var modeLiveData: BusMutableLiveData<String>? = null
+    private val requestBuilder = RequestBuilder()
     /**
      * 通知栏视图
      */
@@ -231,41 +238,15 @@ class MusicService : LifecycleService()  {
             }
         }
         //每次启动服务的时候是更新播放列表的时候
-
         val position=intent?.getIntExtra("position",-1)
-//        if (url != null) {
-//            //if (!isFirst){
-//            Player().initMediaPlayer(url, mediaPlayer, {
-//                //在Service服务类中发送广播消息给Activity活动界面
-//                val intentBroadcastReceiver = Intent();
-//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_NEED;
-//                sendBroadcast(intentBroadcastReceiver);
-//                val songDao = AppDatabase.getDatabase(this).songDao()
-//                updateNotificationShow(songDao.loadId() - 1)
-//            }, {
-//                val intentBroadcastReceiver = Intent();
-//                intentBroadcastReceiver.action = PlayerActivity.ACTION_SERVICE_PERCENT;
-//                intentBroadcastReceiver.putExtra("percent", it)
-//                sendBroadcast(intentBroadcastReceiver);
-//            }) {
-//                //播放完成准备下一首
-//                //监听回调
-//
-//            }
-//        }
         play(position!!,0)
         return super.onStartCommand(intent, flags, startId)
     }
 
-    //    fun getMediaPlayer():MediaPlayer{
-//        return this.mediaPlayers
-//    }
     override fun onDestroy() {
         runBlocking {
             launch {
                 Log.e("MusicService", "onDestroy")
-
-                val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
                 songDao.updateIsPlaying(false, lastPlay = true)
             }
             launch {
@@ -291,7 +272,6 @@ class MusicService : LifecycleService()  {
     @SuppressLint("UnspecifiedImmutableFlag")
     private fun initRemoteViews() {
         remoteViews = RemoteViews(this.packageName, R.layout.item_notification)
-
         //通知栏控制器上一首按钮广播操作
         val intentPrev = Intent(PREV)
         val prevPendingIntent: PendingIntent? =
@@ -303,7 +283,6 @@ class MusicService : LifecycleService()  {
                     intentPrev,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                 )
-
             } else {
                 PendingIntent.getBroadcast(
                     this,
@@ -314,7 +293,6 @@ class MusicService : LifecycleService()  {
             }
         //为prev控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_previous, prevPendingIntent)
-
         //通知栏控制器播放暂停按钮广播操作  //用于接收广播时过滤意图信息
         val intentPlay = Intent(PLAY)
         val playPendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -369,7 +347,6 @@ class MusicService : LifecycleService()  {
                 intentClose,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-
         } else {
             PendingIntent.getBroadcast(
                 this,
@@ -380,7 +357,6 @@ class MusicService : LifecycleService()  {
         }
         //为close控件注册事件
         remoteViews!!.setOnClickPendingIntent(R.id.btn_notification_close, closePendingIntent)
-
     }
 
     /**
@@ -393,17 +369,7 @@ class MusicService : LifecycleService()  {
         val channelName = "播放控制"
         val importance = NotificationManager.IMPORTANCE_MAX
         createNotificationChannel(channelId, channelName, importance)
-        //val remoteViews = RemoteViews(this.packageName, R.layout.notification)
-        //点击整个通知时发送广播
-        //点击整个通知时发送广播
-//        val intent = Intent(applicationContext, NotificationClickReceiver::class.java)
-//        val pendingIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            //设置延迟意图
-//            PendingIntent.getBroadcast(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-//
-//        } else {
-//            PendingIntent.getBroadcast(applicationContext, 0, intent,  PendingIntent.FLAG_UPDATE_CURRENT)
-//        }
+        //点击整个通知时跳转Activity
         val currentActivity: Activity = ActivityManager.getCurrentActivity()!!
         val intent1 = Intent(Intent.ACTION_MAIN)
         intent1.addCategory(Intent.CATEGORY_LAUNCHER)
@@ -417,7 +383,6 @@ class MusicService : LifecycleService()  {
                 intent1,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-
         } else {
             PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_UPDATE_CURRENT)
         }
@@ -434,9 +399,6 @@ class MusicService : LifecycleService()  {
             .setOngoing(true)
             .setContentIntent(pi)
             .build()
-
-        //发送通知
-        //manager!!.notify(1, notification)
     }
 
     /**
@@ -444,7 +406,6 @@ class MusicService : LifecycleService()  {
      * @param position 歌曲位置
      */
     private fun updateNotificationShow(position: Int) {
-        //manager!!.cancel(NOTIFICATION_ID)
         //播放状态判断
         if (mediaPlayer.isPlaying) {
             remoteViews!!.setImageViewResource(R.id.btn_notification_play, R.drawable.ic_pause_blue)
@@ -458,7 +419,6 @@ class MusicService : LifecycleService()  {
         remoteViews!!.setTextViewText(R.id.Notification2Activity_music_name, mList[position].name)
         //歌手名
         remoteViews!!.setTextViewText(R.id.tv_singer, mList[position].artist)
-
         //发送通知
         manager!!.notify(NOTIFICATION_ID, notification)
         try {
@@ -507,7 +467,6 @@ class MusicService : LifecycleService()  {
 
     /**
      * 创建通知渠道
-     *
      * @param channelId   渠道id
      * @param channelName 渠道名称
      * @param importance  渠道重要性
@@ -524,19 +483,9 @@ class MusicService : LifecycleService()  {
         manager!!.createNotificationChannel(channel)
     }
 
-    private val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
-    private val randomDao = AppDatabase.getDatabase(this@MusicService).randomDao()
-
-    /**
-     * Activity通知Service进行数据库的更新
-     */
-    private var modeLiveData: BusMutableLiveData<String>? = null
-    private val requestBuilder = RequestBuilder()
     private fun <T> getAPI(apiType: Class<T>): T = requestBuilder.getAPI(apiType)
-
     @OptIn(DelicateCoroutinesApi::class)
     fun <T> Call<T>.getResponse(process: suspend (flow: Flow<APIResponse<T>>) -> Unit) {
-
         GlobalScope.launch(Dispatchers.IO) {
             process(requestBuilder.getResponseFlow {
                 this@getResponse.execute()//this特指getResponse的调用者而不是协程作用域
@@ -672,9 +621,7 @@ class MusicService : LifecycleService()  {
                         }
                     }
                 }
-
             }
-
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -710,14 +657,6 @@ class MusicService : LifecycleService()  {
             playPosition += 1
         }
         activityLiveData?.postValue(NEXT)
-//        when (prefs.getInt("mode",-1)){
-//            2->{
-//                //在随机列表里面进行顺序播放
-//            }
-//            else->{
-//                play(playPosition,2)
-//            }
-//        }
         play(playPosition,2)
     }
 
@@ -734,7 +673,6 @@ class MusicService : LifecycleService()  {
         } else {
             mediaPlayer.start()
             activityLiveData?.postValue(PLAY)
-
             thread {
                 songDao.updateIsPlaying(true, lastPlay = true)
             }

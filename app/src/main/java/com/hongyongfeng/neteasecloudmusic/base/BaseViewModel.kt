@@ -1,12 +1,27 @@
 package com.hongyongfeng.neteasecloudmusic.base
 
-abstract class BaseViewModel<out M : BaseModel<BaseViewModel<M,*>,*>,  CONTRACT> :
-    Base<CONTRACT>() {
-    var mModel: @UnsafeVariance M
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 
-    init {
-        mModel = modelInstance
+
+open class BaseViewModel : ViewModel() {
+    /**
+     * 控制状态视图的LiveData
+     */
+    val mStateViewLiveData = MutableLiveData<Int>()
+
+    /**
+     * AUTHOR:AbnerMing
+     * INTRODUCE:获取Repository
+     */
+    inline fun <reified R> getRepository(): R? {
+        try {
+            val clazz = R::class.java
+            return clazz.newInstance()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 
-    abstract val modelInstance: M
 }

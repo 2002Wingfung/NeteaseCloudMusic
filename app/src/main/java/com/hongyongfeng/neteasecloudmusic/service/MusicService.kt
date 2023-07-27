@@ -38,7 +38,7 @@ import java.io.IOException
 import kotlin.concurrent.thread
 
 
-class MusicService : LifecycleService() , LifecycleOwner {
+class MusicService : LifecycleService()  {
     /**
      * 通知栏视图
      */
@@ -50,7 +50,6 @@ class MusicService : LifecycleService() , LifecycleOwner {
     private lateinit var musicReceiver: MusicReceiver
     private val mBinder = MediaPlayerBinder()
     private lateinit var prefs: SharedPreferences
-
 
     /**
      * 歌曲间隔时间
@@ -273,9 +272,6 @@ class MusicService : LifecycleService() , LifecycleOwner {
 
                 val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
                 songDao.updateIsPlaying(false, lastPlay = true)
-//                for (song in songDao.loadAllSongs()){
-//                    Log.e("MainActivity",song.toString()+"id:${song.id}")
-//                }
             }
             launch {
                 mediaPlayer.stop()
@@ -759,9 +755,9 @@ class MusicService : LifecycleService() , LifecycleOwner {
      * 关闭音乐通知栏
      */
     fun closeNotification() {
-        if (mediaPlayer.isPlaying) {
-            mediaPlayer.pause()
-        }
+//        if (mediaPlayer.isPlaying) {
+//            mediaPlayer.pause()
+//        }
         manager!!.cancel(NOTIFICATION_ID)
         activityLiveData?.postValue(CLOSE)
     }

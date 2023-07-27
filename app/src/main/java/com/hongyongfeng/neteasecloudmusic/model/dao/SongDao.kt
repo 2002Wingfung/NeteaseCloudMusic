@@ -23,7 +23,8 @@ interface SongDao {
 
     @Query("update song set isPlaying = :newStatus where lastPlaying== :lastPlay")
     fun updateIsPlaying(newStatus:Boolean, lastPlay:Boolean)
-
+    @Query("update song set isPlaying = :newStatus where isPlaying== 1")
+    fun updateIsPlayingBySelf(newStatus:Boolean)
     @Query("update song set lastPlaying= :lastPlaying  where lastPlaying=:origin")
     fun updateLastPlaying(lastPlaying:Boolean,origin:Boolean)
     @Query("update song set lastPlaying= :lastPlaying where id=:id")

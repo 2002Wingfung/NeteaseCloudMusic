@@ -4,9 +4,7 @@ import LiveDataBus
 import LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.os.*
 import android.util.Log
 import android.view.View
@@ -212,6 +210,8 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         nav.layoutParams = nav.layoutParams
         headerLayout =nav.inflateHeaderView(R.layout.nav_header)
 
+        prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+
         initView()
         initListener()
         initAnimation()
@@ -235,7 +235,9 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }
         }
 
-        if (MusicService.mediaPlayer.isPlaying){
+        val isPlayingSong=songDao.loadIsPlayingSong()
+        println(isPlayingSong)
+        if (isPlayingSong!=null){
             if (logoAnimation.isPaused){
                 logoAnimation.resume()
             }else{
@@ -280,7 +282,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             thread {
                 val songDao=AppDatabase.getDatabase(this).songDao()
                 val lastSong=songDao.loadLastPlayingSong()
-
                 val bundle=Bundle()
                 bundle.putString("name",lastSong?.name)
                 lastSong?.songId?.toInt()?.let { it1 -> bundle.putInt("id", it1) }
@@ -300,15 +301,23 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         val intent = Intent(this, MusicService::class.java)
         stopService(intent)
 
+        songDao.updateIsPlayingBySelf(false)
+        Log.e("MainActivity","onDestroy")
         unbindService(mServiceConnection)
-        exitProcess(0)
+        //musicService?.onDestroy()
+        //exitProcess(0)
     }
+    private lateinit var prefs: SharedPreferences
 
     private var counts=0
     private lateinit var imgButton: MaterialButton
     fun onClick(view: View) {
         //"播放".showToast(this)
-        val id=songDao.loadId()
+        val id=if (prefs.getInt("mode",0)!=2){
+            songDao.loadId()
+        }else{
+            randomDao.loadLastPlayingSongId()
+        }
         if (counts%2!=0){
             imgButton.setIconResource(R.drawable.ic_play_circle_2)
             musicService!!.pauseOrContinueMusic()
@@ -319,7 +328,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             if (counts!=0){
                 musicService!!.pauseOrContinueMusic()
             }else{
-                musicService!!.play(id-1,0)
+                if (id != null) {
+                    musicService!!.play(id-1,0)
+                }else{
+                    musicService!!.play(0,0)
+                }
             }
             //
 

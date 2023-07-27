@@ -23,6 +23,7 @@ import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.adapter.SongAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityPlayerBinding
+import com.hongyongfeng.neteasecloudmusic.model.dao.RandomDao
 import com.hongyongfeng.neteasecloudmusic.model.dao.SongDao
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
@@ -62,11 +63,14 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private var listSongs= mutableListOf<Song>()
     private var adapter= SongAdapter(listSongs)
     private lateinit var songDao:SongDao
+    private lateinit var randomDao: RandomDao
 
     /**
      * 当在Activity中做出播放模式的改变时，通知做出相应改变
      */
     private var modeLiveData: BusMutableLiveData<String>? = null
+    private var status:Int?=0
+    private var first= mutableListOf(1)
     private lateinit var myService: MusicService
     companion object {
         const val ACTION_SERVICE_PERCENT: String="action.percent"
@@ -165,7 +169,10 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         initAnimation()
         prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
         songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
+        randomDao= AppDatabase.getDatabase(this@PlayerActivity).randomDao()
         val bundle = intent.extras
+        status=bundle?.getInt("status")
+
         position=bundle?.getInt("position")
         val name=bundle?.getString("name")
         binding.tvTitle.text=name
@@ -218,7 +225,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }else
             {
                 Log.e("MyPlayerActivity","是同一首歌")
-                val status=bundle.getInt("status")
                 if (status!=-1){
                     if (!mediaPlayer.isPlaying){
                         mediaPlayer.stop()
@@ -234,13 +240,9 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                                 handler.sendEmptyMessageDelayed(0, 700)
                                 val duration=mediaPlayer.duration
                                 seekBar.max= duration
-
                                 binding.tvTotal.text=time(duration)
-                                //seekBar.progress = mediaPlayer.currentPosition
-
                                 refresh(seekBar, mediaPlayer)
                                 mAnimatorNeedleStart.pause()
-
                                 mAnimatorNeedlePause.start()
                                 //"暂停".showToast(this)
                                 binding.icPlay.background=  getDrawable(R.drawable.ic_play_circle_2)
@@ -255,22 +257,15 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 }
             }
         }
-
         binding.tvSinger.text=singer
-
         transparentNavBar(this)
         initView(binding, StatusBarUtils.getStatusBarHeight(this as AppCompatActivity)+5)
         initListener()
-
-
         mAnimator.start()
-
         //当音频文件加载好之后就start
-
     // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
         notificationObserver()
         register()
-
         prefs.getInt("mode",-1).apply {
             if (this!=-1){
                 count1+=this
@@ -285,7 +280,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 }
             }
         }
-
     }
     private fun register(){
         val filterPercent = IntentFilter()
@@ -406,7 +400,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             binding.tvTotal.text=time(it.response.data[0].time)
                             //Log.e("serviceMusic","Start")
                             intent.putExtra("position",position)
-                            Log.e("playerposition",position.toString())
                             startService(intent)
                             //val songDao=AppDatabase.getDatabase(this@PlayerActivity).songDao()
                             //myService.updateNotificationShow(songDao.loadId()-1)
@@ -470,6 +463,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                     thread {
                         //将isPlaying设为false
                         songDao.updateIsPlaying(false, lastPlay = true)
+                        songDao.updateIsPlayingBySelf(false)
                     }
                 }
             }else{
@@ -477,13 +471,26 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 mAnimatorNeedlePause.pause()
                 mAnimatorNeedleStart.start()
                 it.background = getDrawable(R.drawable.ic_pause)
+
                 if (!mediaPlayer.isPlaying){
-                    //开始播放
-                    myService.pauseOrContinueMusic()
-                    thread {
-                        songDao.updateIsPlaying(true, lastPlay = true)
+                    if (status==-1&&first[0]==1){
+                        first[0]=0
+                        if (prefs.getInt("mode",0)==2){
+                            myService.play(randomDao.loadLastPlayingSongId()?.minus(1)?:0,0)
+                        }else{
+                            myService.play(songDao.loadLastPlayingSong()?.id?.toInt()?.minus(1) ?: 0,0)
+                        }
+                    }else{
+                        //开始播放
+                        myService.pauseOrContinueMusic()
+                        thread {
+                            songDao.updateIsPlaying(true, lastPlay = true)
+                        }
                     }
+
                 }
+
+
             }
             count++
         }
@@ -623,6 +630,10 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     override fun onDestroy() {
         super.onDestroy()
         Log.e("MyPlayerActivity","onDestroy")
+        val intent = Intent(this@PlayerActivity, MusicService::class.java)
+
+        stopService(intent)
+        unbindService(mServiceConnection)
         if (::timer.isInitialized){
             timer.cancel()
         }

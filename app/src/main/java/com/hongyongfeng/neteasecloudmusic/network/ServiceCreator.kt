@@ -7,7 +7,9 @@ object ServiceCreator {
     //const val BASE_URL="http://10.0.2.2:3000/"
     //const val BASE_URL="http://192.168.1.103:3000/"
     //const val BASE_URL="http://192.168.3.67:3000/"
-    const val BASE_URL="http://192.168.0.101:3000/"
+    //const val BASE_URL="http://192.168.0.101:3000/"
+    const val BASE_URL="http://10.33.85.154:3000/"
+
     //const val BASE_URL="http://192.168.31.146:3000/"
     //const val BASE_URL="http://10.0.2.2/"
     private val retrofit=Retrofit.Builder()

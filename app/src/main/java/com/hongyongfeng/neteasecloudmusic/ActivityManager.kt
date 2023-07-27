@@ -3,16 +3,12 @@ package com.hongyongfeng.neteasecloudmusic
 import android.app.Activity
 import java.lang.ref.WeakReference
 
-
 class ActivityManager {
-
-
     companion object{
         /**
          * 弱引用
          */
         private var activityWeakReference: WeakReference<Activity>? = null
-
         private val activityUpdateLock = Any()
         /**
          * 得到当前Activity
@@ -27,7 +23,6 @@ class ActivityManager {
             }
             return currentActivity
         }
-
         /**
          * 设置当前Activity
          * @return
@@ -38,5 +33,4 @@ class ActivityManager {
             }
         }
     }
-
 }

@@ -3,27 +3,27 @@ package com.hongyongfeng.neteasecloudmusic.viewmodel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hongyongfeng.neteasecloudmusic.base.BaseViewModel
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.RequestBuilder
+import com.hongyongfeng.neteasecloudmusic.testNew.TestRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import retrofit2.Call
 
-class SearchViewModel :ViewModel(){
+class SearchViewModel :BaseViewModel(){
     val testValue by lazy {
         MutableLiveData("")
     }
-    private val requestBuilder= RequestBuilder()
-    fun <T>getAPI(apiType:Class<T>):T= requestBuilder.getAPI(apiType)
-
-    fun <T> Call<T>.getResponse(process: suspend (flow: Flow<APIResponse<T>>)->Unit){
-        viewModelScope.launch (Dispatchers.IO){
-            process(requestBuilder.getResponseFlow {
-                this@getResponse.execute()//this特指getResponse的调用者而不是协程作用域
-            })
-        }
+    /**
+     * AUTHOR:hong
+     * INTRODUCE:获取需要的Repository
+     */
+    private val repository by lazy {
+        getRepository<TestRepository>()
+    }
+    fun clearTableSong(){
 
     }
-    //fun insertSongs()
 }

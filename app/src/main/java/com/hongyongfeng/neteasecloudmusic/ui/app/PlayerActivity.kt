@@ -473,13 +473,13 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 it.background = getDrawable(R.drawable.ic_pause)
 
                 if (!mediaPlayer.isPlaying){
-                    if (status==-1&&first[0]==1){
-                        first[0]=0
+                    if (status==-1&& mediaPlayer.currentPosition==0){
                         if (prefs.getInt("mode",0)==2){
                             myService.play(randomDao.loadLastPlayingSongId()?.minus(1)?:0,0)
                         }else{
                             myService.play(songDao.loadLastPlayingSong()?.id?.toInt()?.minus(1) ?: 0,0)
                         }
+                        songDao.updateIsPlaying(true, lastPlay = true)
                     }else{
                         //开始播放
                         myService.pauseOrContinueMusic()
@@ -487,10 +487,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             songDao.updateIsPlaying(true, lastPlay = true)
                         }
                     }
-
                 }
-
-
             }
             count++
         }

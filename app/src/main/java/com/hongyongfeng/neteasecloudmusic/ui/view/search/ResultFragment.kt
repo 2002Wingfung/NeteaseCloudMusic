@@ -9,7 +9,6 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.R
@@ -45,9 +44,11 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     private lateinit var recyclerView: RecyclerView
     private lateinit var binding:FragmentResultBinding
     private lateinit var mActivity: FragmentActivity
-    private lateinit var viewModel: SearchViewModel
+    private lateinit var viewModel: PublicViewModel
     private lateinit var songDao:SongDao
     private lateinit var randomDao: RandomDao
+    private lateinit var prefs: SharedPreferences
+    var isScroll=false
 
     override fun initFragment(
         binding: FragmentResultBinding,
@@ -57,16 +58,19 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     ) {
         this.binding=binding
         recyclerView = binding.rvSongs
-        if (viewModel != null) {
-            this.viewModel=viewModel
+        if (publicViewModel != null) {
+            this.viewModel=publicViewModel
         }
+        mActivity=requireActivity()
+        prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
+        songDao=AppDatabase.getDatabase(mActivity).songDao()
+        randomDao=AppDatabase.getDatabase(mActivity).randomDao()
+        SetRecyclerView.setRecyclerView(
+            mActivity,
+            recyclerView,
+            adapter
+        )
     }
-
-    private fun initView(){
-
-
-    }
-
     override fun onStart() {
         super.onStart()
         if (listSongs.isEmpty()){
@@ -74,71 +78,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         }
     }
 
-    private fun searchRequest(string: String,page:Int) {
-        viewModel.apply {
-            getAPI(SearchInterface::class.java).getSearchData(string,30,(page)*30).getResponse {
-                    flow ->
-                flow.collect(){
-                    when(it){
-                        is APIResponse.Error-> {
-                            Log.e("TAG",it.errMsg)
-                            adapter.notifyItemChanged(listSongs.size-1)
-                            withContext(Dispatchers.Main){
-                                Toast.makeText(mActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                        is APIResponse.Loading-> Log.e("TAG","loading")
-                        is APIResponse.Success-> withContext(Dispatchers.Main){
-                            val songsList=it.response.result.songs
-                            //val songsName=it.response
-                            //println(String(songsName.bytes()))
-                            //println(songsName)
-
-                            if(songsList.isNotEmpty()){
-                                listSongs.addAll(songsList)
-
-                            }else{
-                                val view = recyclerView.getChildAt(recyclerView.childCount - 1)
-                                if (view != null) {
-                                    val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
-                                    bar.visibility = View.GONE
-                                    val tv = view.findViewById<TextView>(R.id.tv_load)
-                                    tv.text="没有更多内容了"
-                                    isScroll=true
-                                }
-                            }
-                            adapter.notifyItemChanged(listSongs.size)
-
-                            //println(listSongs.get(0))
-//                            println(list.data)
-//                            println(list.code)
-                            //切换主线程
-                            //更新UI
-                            //Toast.makeText(requireContext(), "登录成功", Toast.LENGTH_SHORT).show()
-                            //findNavController().navigate(R.id.action_loginFragment_to_mainNavFragment)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        mActivity=requireActivity()
-        prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
-        songDao=AppDatabase.getDatabase(mActivity).songDao()
-        randomDao=AppDatabase.getDatabase(mActivity).randomDao()
-        initView()
-        SetRecyclerView.setRecyclerView(
-            mActivity,
-            recyclerView,
-            adapter
-        )
-    }
-    var isScroll=false
     override fun initListener() {
-
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -170,30 +110,17 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                     }
                 }
         })
-        adapter.setOnItemClickListener({ view, position ->
-
+        adapter.setOnItemClickListener({ _, position ->
             val songs = listSongs[position]
             val intent = Intent(mActivity, PlayerActivity::class.java)
             val bundle = Bundle()
             bundle.putString("name", songs.name)
             bundle.putInt("id", songs.id)
-//            val prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
-
             val artistList = songs.getArtists()
             val artists = getArtists(artistList)
-//            prefs.edit{
-//                putInt("lastSongId",songs.id)
-//
-//                putString("lastSongName",songs.name)
-//                putString("lastSongArtist",artists)
-//            }
-            //先保存到数据库，然后再跳转Activity
-
             thread {
                 songDao.deleteAllSong()
                 songDao.clearAutoIncrease()
-                //randomDao.deleteAllRandom()
-                //randomDao.clearAutoIncrease()
                 for (songs1 in listSongs) {
                     val song = Song(
                         songs1.name,
@@ -228,8 +155,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                 intent.putExtras(bundle)
                 startActivity(intent)
             }
-        }) { view, position ->
-
+        }) { _, position ->
             listSongs[position].apply {
                 val artists = this@ResultFragment.getArtists(getArtists())
                 val song = Song(name, id.toLong(), getAlbum()?.id?.toLong()?:0, artists)
@@ -248,7 +174,6 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         }
 
     }
-    private lateinit var prefs: SharedPreferences
 
     private fun getArtists(artistList: List<Artists>?): String {
         val artists = java.lang.StringBuilder()
@@ -260,5 +185,40 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             }
         }
         return artists.toString()
+    }
+    private fun searchRequest(string: String,page:Int) {
+        viewModel.apply {
+            getAPI(SearchInterface::class.java).getSearchData(string,30,(page)*30).getResponse {
+                    flow ->
+                flow.collect {
+                    when(it){
+                        is APIResponse.Error-> {
+                            Log.e("TAG",it.errMsg)
+                            adapter.notifyItemChanged(listSongs.size-1)
+                            withContext(Dispatchers.Main){
+                                Toast.makeText(mActivity, "网络连接错误", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        is APIResponse.Loading-> Log.e("TAG","loading")
+                        is APIResponse.Success-> withContext(Dispatchers.Main){
+                            val songsList=it.response.result.songs
+                            if(songsList.isNotEmpty()){
+                                listSongs.addAll(songsList)
+                            }else{
+                                val view = recyclerView.getChildAt(recyclerView.childCount - 1)
+                                if (view != null) {
+                                    val bar = view.findViewById<ProgressBar>(R.id.progress_bar)
+                                    bar.visibility = View.GONE
+                                    val tv = view.findViewById<TextView>(R.id.tv_load)
+                                    tv.text="没有更多内容了"
+                                    isScroll=true
+                                }
+                            }
+                            adapter.notifyItemChanged(listSongs.size)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

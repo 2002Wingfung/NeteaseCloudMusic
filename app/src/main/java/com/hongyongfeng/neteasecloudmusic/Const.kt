@@ -1,7 +1,6 @@
 package com.hongyongfeng.neteasecloudmusic
 
 class Const {
-
 }
 
 /**

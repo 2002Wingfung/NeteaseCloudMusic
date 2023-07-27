@@ -5,7 +5,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.R
-import com.hongyongfeng.neteasecloudmusic.adapter.PlayListAdapter
 import com.hongyongfeng.neteasecloudmusic.databinding.ItemListBinding
 
 class PlayListViewHolder (itemView: View, val  onClickListener:(view:View, position:Int)->Unit, val binding: ItemListBinding):

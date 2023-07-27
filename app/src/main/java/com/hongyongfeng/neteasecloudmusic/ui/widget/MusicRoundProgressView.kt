@@ -12,7 +12,7 @@ import com.hongyongfeng.neteasecloudmusic.R
 /**
  * 圆形进度条
  *
- * @author llw
+ * @author hong
  */
 class MusicRoundProgressView(context: Context, attrs: AttributeSet?) :
     View(context, attrs) {

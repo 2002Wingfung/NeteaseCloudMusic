@@ -16,7 +16,6 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.findNavController
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
-import com.gsls.gtk.log
 import com.hongyongfeng.neteasecloudmusic.*
 import com.hongyongfeng.neteasecloudmusic.base.BaseActivity
 import com.hongyongfeng.neteasecloudmusic.databinding.ActivityMainBinding
@@ -29,8 +28,6 @@ import com.hongyongfeng.neteasecloudmusic.ui.view.search.HotFragment
 import com.permissionx.guolindev.PermissionX
 import com.squareup.picasso.Picasso
 import kotlin.concurrent.thread
-import kotlin.system.exitProcess
-
 
 class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBinding::inflate,true) {
     /**
@@ -67,7 +64,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     mBackPressed = System.currentTimeMillis()
                 }
             }else{
-
                 childFragmentManager.fragments[0].apply{
                     if(this.childFragmentManager.fragments.isNotEmpty()){
                         this.childFragmentManager.fragments[0].apply {
@@ -79,16 +75,13 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                                         println(e)
                                     }
                                 }
-
                             }
                         }
                     }
-
                 }
                 super.onBackPressed()
             }
         }
-
     }
 
     /**
@@ -107,7 +100,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         thread {
             val song=songDao.loadIsPlayingSong()
             if (song!=null){
-
                 runOnUiThread{
                     //这个不用改
                     logoAnimation.start()
@@ -331,12 +323,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }else{
                 if (id != null) {
                     musicService!!.play(id-1,0)
+                    songDao.updateIsPlaying(true, lastPlay = true)
                 }else{
                     musicService!!.play(0,0)
                 }
             }
-            //
-
             if (logoAnimation.isPaused) {
                 logoAnimation.resume()
             }else{
@@ -344,7 +335,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }
         }
         counts++
-
         thread {
             for (song in randomDao.loadAllRandomSong()){
                 Log.e("MainActivity",song.toString()+"id:${song.id}")

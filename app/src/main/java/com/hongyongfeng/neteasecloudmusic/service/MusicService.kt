@@ -40,7 +40,6 @@ import retrofit2.Call
 import java.io.IOException
 import kotlin.concurrent.thread
 
-@SuppressLint()
 class MusicService : LifecycleService() {
     private val songDao = AppDatabase.getDatabase(this@MusicService).songDao()
     private val randomDao = AppDatabase.getDatabase(this@MusicService).randomDao()

@@ -3,7 +3,6 @@ package com.hongyongfeng.neteasecloudmusic.ui.app
 import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus
 import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
 import android.content.*
 import android.os.*
 import android.util.Log
@@ -35,7 +34,16 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
      */
     private lateinit var logoAnimation: ObjectAnimator
     private var mBackPressed: Long = 0
-
+    private lateinit var prefs: SharedPreferences
+    private var counts=0
+    private lateinit var imgButton: MaterialButton
+    private var musicBinder:MusicService.MediaPlayerBinder?=null
+    private var musicService: MusicService? = null
+    private lateinit var songDao:SongDao
+    private lateinit var randomDao:RandomDao
+    private val requestList = ArrayList<String>()
+    private lateinit var headerLayout:View
+    private lateinit var nav:NavigationView
     /**
      * 当Service中通知栏有变化时接收到消息
      */
@@ -50,8 +58,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             musicBinder=null
         }
     }
-    private var musicBinder:MusicService.MediaPlayerBinder?=null
-    private var musicService: MusicService? = null
+    @Suppress("DEPRECATION")
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         supportFragmentManager.fragments[0].apply {
@@ -94,7 +101,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         logoAnimation.repeatCount = -1
         logoAnimation.repeatMode = ObjectAnimator.RESTART
     }
-    @SuppressLint("SetTextI18n")
     private fun initBottomPlayer(){
         val songDao=AppDatabase.getDatabase(this).songDao()
         thread {
@@ -125,12 +131,9 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     }
                 }
             }
-
         }
     }
 
-    private lateinit var songDao:SongDao
-    private lateinit var randomDao:RandomDao
     /**
      * 通知栏动作观察者
      */
@@ -175,12 +178,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             }
         }
     }
-    private val requestList = ArrayList<String>()
-    private lateinit var headerLayout:View
-    private lateinit var nav:NavigationView
+
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //获取通知权限
         requestList.add(PermissionX.permission.POST_NOTIFICATIONS)
         PermissionX.init(this)
             .permissions(requestList)
@@ -196,14 +198,11 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                     Toast.makeText(this, "您拒绝了如下权限：$deniedList", Toast.LENGTH_SHORT).show()
                 }
             }
-
         nav=binding.navView
         nav.layoutParams.width= resources.displayMetrics.widthPixels *4/ 5//屏幕的三分之一
         nav.layoutParams = nav.layoutParams
         headerLayout =nav.inflateHeaderView(R.layout.nav_header)
-
         prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
-
         initView()
         initListener()
         initAnimation()
@@ -226,7 +225,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                 Picasso.get().load(song.albumUrl).fit().into(binding.ivLogo)
             }
         }
-
         val isPlayingSong=songDao.loadIsPlayingSong()
         if (isPlayingSong!=null){
             if (logoAnimation.isPaused){
@@ -270,7 +268,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
             false
         }
         binding.layBottom.setOnClickListener {
-
             thread {
                 val songDao=AppDatabase.getDatabase(this).songDao()
                 val lastSong=songDao.loadLastPlayingSong()
@@ -287,7 +284,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         }
     }
 
-
     override fun onDestroy() {
         super.onDestroy()
         val intent = Intent(this, MusicService::class.java)
@@ -296,11 +292,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         Log.e("MainActivity","onDestroy")
         unbindService(mServiceConnection)
     }
-    private lateinit var prefs: SharedPreferences
-
-    private var counts=0
-    private lateinit var imgButton: MaterialButton
-    fun onClick(view: View) {
+    fun onClick() {
         //"播放".showToast(this)
         val id=if (prefs.getInt("mode",0)!=2){
             songDao.loadId()

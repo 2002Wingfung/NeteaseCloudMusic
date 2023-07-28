@@ -3,6 +3,7 @@ package com.hongyongfeng.neteasecloudmusic.ui.app
 import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus
 import com.hongyongfeng.neteasecloudmusic.livedata.LiveDataBus.BusMutableLiveData
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.*
 import android.media.MediaPlayer
 import android.os.*
@@ -44,8 +45,6 @@ import kotlin.math.roundToInt
 class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     ActivityPlayerBinding::inflate,true
 ){
-    private lateinit var imageLoader: ImageLoader
-
     /**
      * 当Service中通知栏有变化时接收到消息
      */
@@ -70,7 +69,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
      */
     private var modeLiveData: BusMutableLiveData<String>? = null
     private var status:Int?=0
-    private var first= mutableListOf(1)
     private lateinit var myService: MusicService
     companion object {
         const val ACTION_SERVICE_PERCENT: String="action.percent"
@@ -111,13 +109,11 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val min=(time/1000f/60).toInt()
         val s=(time-min*60*1000)/1000f.roundToInt()
 
-        return if (min==1&&s==10){
-            "0$min:$s"
-        }else if(min==0&&s==10){
+        return if (s==10){
             "0$min:$s"
         }else if(min<10&&s<10){
             "0$min:0$s"
-        }else if (min<10&&s>10){
+        }else if (min<10){
             "0$min:$s"
         }else if (min>10&&s<10){
             "$min:0$s"
@@ -162,6 +158,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         // 设置重复的次数，无限
         mAnimator.repeatCount = ObjectAnimator.INFINITE
     }
+    @SuppressLint("UseCompatLoadingForDrawables")
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -285,14 +282,14 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val filterPercent = IntentFilter()
         filterPercent.addAction(ACTION_SERVICE_PERCENT)
 
-        registerReceiver(PercentReceiver(), filterPercent);
+        registerReceiver(PercentReceiver(), filterPercent)
         val filterComplete = IntentFilter()
         filterComplete.addAction(ACTION_SERVICE_COMPLETE)
-        registerReceiver(CompleteReceiver(), filterComplete);
+        registerReceiver(CompleteReceiver(), filterComplete)
         val filter = IntentFilter()
         filter.addAction(ACTION_SERVICE_NEED)
 
-        registerReceiver(ServiceBroadcastReceiver(), filter);
+        registerReceiver(ServiceBroadcastReceiver(), filter)
     }
     private fun initView(binding: ActivityPlayerBinding, dp:Int){
         val lp = binding.layoutActionBar.layoutParams as ConstraintLayout.LayoutParams
@@ -367,6 +364,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
     }
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun songsRequest(songId:Int){
         //请求音频文件的代码
         //先获取音频的url，再进行解析
@@ -417,7 +415,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         publicViewModel!!.apply {
             getAPI(PlayerInterface::class.java).getAlbum(albumId.toString()).getResponse {
                     flow ->
-                flow.collect(){
+                flow.collect{
                     when(it){
                         is APIResponse.Error-> {
                             Log.e("TAGInternet",it.errMsg)
@@ -445,8 +443,9 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
     }
-    var count1=0
+    private var count1=0
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private fun initListener() {
         binding.btnBack.setOnClickListener {
             finish()
@@ -558,13 +557,13 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 binding.tvCurrent.text=time(progress)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                MusicService.isChanging=true;
+                MusicService.isChanging=true
             }
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 //当拖动停止后，控制mediaPlayer播放指定位置的音乐
                 seekBar!!.max= mediaPlayer.duration
                 mediaPlayer.seekTo(seekBar.progress)
-                MusicService.isChanging=false;
+                MusicService.isChanging=false
             }
         })
         adapter.setOnItemClickListener({

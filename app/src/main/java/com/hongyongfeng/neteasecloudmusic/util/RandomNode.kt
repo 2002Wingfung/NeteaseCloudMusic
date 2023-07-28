@@ -1,13 +1,10 @@
 package com.hongyongfeng.neteasecloudmusic.util
 
 import android.content.Context
-import android.util.Log
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import java.util.*
 
-
 class RandomNode {
-
     companion object{
         private fun judge(arr: IntArray, num: Int): Boolean {
             for (i in arr.indices) {
@@ -18,7 +15,6 @@ class RandomNode {
             return true
         }
         @JvmStatic
-
         fun randomList(n:Int,context:Context) {
             val arr = IntArray(n) //产生一个能存到n个元素的数组
             for (i in arr.indices) {
@@ -36,12 +32,7 @@ class RandomNode {
             randomDao.deleteAllRandom()
             randomDao.clearAutoIncrease()
             for (i in arr.indices) {
-                println(arr[i])
-
                 randomDao.insert(arr[i])
-            }
-            randomDao.loadAllRandom().forEach{
-                Log.e("random",it.toString()+"id=${it.id}")
             }
         }
     }

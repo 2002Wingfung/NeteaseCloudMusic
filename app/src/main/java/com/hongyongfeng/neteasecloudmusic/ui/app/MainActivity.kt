@@ -228,7 +228,6 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         }
 
         val isPlayingSong=songDao.loadIsPlayingSong()
-        println(isPlayingSong)
         if (isPlayingSong!=null){
             if (logoAnimation.isPaused){
                 logoAnimation.resume()
@@ -236,6 +235,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
                 logoAnimation.start()
             }
             imgButton.setIconResource(R.drawable.ic_pause)
+            counts++
         }else{
             logoAnimation.pause()
             imgButton.setIconResource(R.drawable.ic_play_circle_2)

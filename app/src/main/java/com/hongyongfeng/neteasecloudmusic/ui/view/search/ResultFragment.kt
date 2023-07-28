@@ -44,7 +44,8 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
     private lateinit var recyclerView: RecyclerView
     private lateinit var binding:FragmentResultBinding
     private lateinit var mActivity: FragmentActivity
-    private lateinit var viewModel: PublicViewModel
+    private lateinit var mPublicViewModel: PublicViewModel
+    private lateinit var mSearchViewModel: SearchViewModel
     private lateinit var songDao:SongDao
     private lateinit var randomDao: RandomDao
     private lateinit var prefs: SharedPreferences
@@ -59,7 +60,10 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         this.binding=binding
         recyclerView = binding.rvSongs
         if (publicViewModel != null) {
-            this.viewModel=publicViewModel
+            this.mPublicViewModel=publicViewModel
+        }
+        if (viewModel!=null){
+            this.mSearchViewModel=viewModel
         }
         mActivity=requireActivity()
         prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
@@ -119,8 +123,9 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             val artistList = songs.getArtists()
             val artists = getArtists(artistList)
             thread {
-                songDao.deleteAllSong()
-                songDao.clearAutoIncrease()
+                mSearchViewModel.clearTableSong()
+//                songDao.deleteAllSong()
+//                songDao.clearAutoIncrease()
                 for (songs1 in listSongs) {
                     val song = Song(
                         songs1.name,
@@ -128,30 +133,29 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
                         songs1.getAlbum()!!.id * 1L,
                         getArtists(songs1.getArtists())
                     )
-                    song.id = songDao.insertSong(song)
+                    song.id =mSearchViewModel.insertSong(song)
+                    //song.id = songDao.insertSong(song)
                     if (song.id - 1 == position * 1L) {
                         song.isPlaying = true
                         //以下使得lastPlaying为true的代码要在service中切歌的时候再写一遍
                         song.lastPlaying = true
-                        songDao.updateSong(song)
+                        //songDao.updateSong(song)
+                        mSearchViewModel.updateSong(song)
                     }
                 }
-                if (prefs.getInt("mode",-1)==2){
-                    val max=songDao.selectMaxId().toInt()
+                //if (prefs.getInt("mode",-1)==2){
+                if (mSearchViewModel.getPlayMode()==2){
+                    //val max=songDao.selectMaxId().toInt()
+                    val max=mSearchViewModel.selectMaxId().toInt()
                     RandomNode.randomList(max,mActivity)
-                    bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
+                    //bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
+                    bundle.putInt("position",((mSearchViewModel.loadRandomBySongId(position + 1)!!.id  - 1)).toInt())
                 }else{
                     bundle.putInt("position",position)
                 }
                 val albumId = songs.getAlbum()!!.id
                 bundle.putInt("albumId", albumId)
-                if (prefs.getInt("mode",-1)==2) {
-                    bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
-                }else{
-                    bundle.putInt("position",position)
-                }
                 bundle.putString("singer", artists)
-                //bundle 传递数据库的list，而不是retrofit返回的list，记得看怎么序列化
                 intent.putExtras(bundle)
                 startActivity(intent)
             }
@@ -159,22 +163,24 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
             listSongs[position].apply {
                 val artists = this@ResultFragment.getArtists(getArtists())
                 val song = Song(name, id.toLong(), getAlbum()?.id?.toLong()?:0, artists)
-                songDao.loadLastPlayingSong().apply {
+//                songDao.loadLastPlayingSong().apply {
+                mSearchViewModel.loadLastPlayingSong().apply {
                     song.id = ((this?.id)?.plus(1)) ?: 1
                     if (this?.id != null) {
-                        val max = songDao.selectMaxId()
+                        //val max = songDao.selectMaxId()
+                        val max = mSearchViewModel.selectMaxId()
                         for (mId in max downTo this.id + 1) {
-                            songDao.plusSongById(mId)
+//                            songDao.plusSongById(mId)
+                            mSearchViewModel.plusSongById(mId)
                         }
                     }
                 }
-                songDao.insertSong(song)
+                //songDao.insertSong(song)
+                mSearchViewModel.insertSong(song)
                 ("已添加到下一首播放").showToast(mActivity)
             }
         }
-
     }
-
     private fun getArtists(artistList: List<Artists>?): String {
         val artists = java.lang.StringBuilder()
         for (artist in artistList!!) {
@@ -187,7 +193,7 @@ class ResultFragment : BaseFragment<FragmentResultBinding, SearchViewModel>(
         return artists.toString()
     }
     private fun searchRequest(string: String,page:Int) {
-        viewModel.apply {
+        mPublicViewModel.apply {
             getAPI(SearchInterface::class.java).getSearchData(string,30,(page)*30).getResponse {
                     flow ->
                 flow.collect {

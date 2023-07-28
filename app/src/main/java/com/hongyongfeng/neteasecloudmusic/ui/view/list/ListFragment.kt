@@ -189,8 +189,6 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
                 if (prefs.getInt("mode",-1)==2){
                     val max=songDao.selectMaxId().toInt()
                     RandomNode.randomList(max,mActivity)
-                    Log.e("position",(randomDao.loadRandomBySongId(position+1).id).toString())
-                    Log.e("position",(randomDao.loadRandomBySongId(position+1).id-1).toString())
                     bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
                 }else{
                     bundle.putInt("position",position)

@@ -424,11 +424,44 @@ class MusicService : LifecycleService()  {
         try {
             if (mList[position].albumUrl.isNullOrEmpty()){
                 println("empty")
-                songDao.loadLastPlayingSong()?.albumUrl.apply {
+                val song=songDao.loadLastPlayingSong()
+                song?.albumUrl.apply {
                     if (this.isNullOrEmpty()){
                         println("still empty")
                         //请求网络获取图片url
-                        //getAPI()
+                        getAPI(PlayerInterface::class.java).getAlbum(song?.albumId.toString()).getResponse {
+                                flow ->
+                            flow.collect(){
+                                when(it){
+                                    is APIResponse.Error-> {
+                                        Log.e("TAGInternet",it.errMsg)
+                                        withContext(Dispatchers.Main){
+                                            Toast.makeText(this@MusicService, "网络连接错误", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                    is APIResponse.Loading-> Log.e("TAG","loading")
+                                    is APIResponse.Success-> withContext(Dispatchers.Main){
+                                        val url=it.response.songs[0].al.picUrl
+                                        Picasso.get()
+                                            .load(url)
+                                            .resize(128, 128)
+                                            .into(object : com.squareup.picasso.Target {
+                                                override fun onBitmapLoaded(bitmap: Bitmap?, from: LoadedFrom?) {
+                                                    remoteViews!!.setImageViewBitmap(R.id.img_album, bitmap)
+                                                    manager!!.notify(NOTIFICATION_ID, notification)
+                                                }
+                                                override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+                                                }
+                                                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                                                }
+                                            })
+                                        thread {
+                                            songDao.updateAlbumUrl(url,song!!.albumId.toInt())
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }else{
                         Picasso.get()
                             .load(this)

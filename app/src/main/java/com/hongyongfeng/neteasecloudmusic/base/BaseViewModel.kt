@@ -3,7 +3,6 @@ package com.hongyongfeng.neteasecloudmusic.base
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-
 open class BaseViewModel : ViewModel() {
     /**
      * 控制状态视图的LiveData
@@ -23,5 +22,4 @@ open class BaseViewModel : ViewModel() {
         }
         return null
     }
-
 }

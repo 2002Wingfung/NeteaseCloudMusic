@@ -12,10 +12,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import com.hongyongfeng.neteasecloudmusic.R
-import com.hongyongfeng.neteasecloudmusic.RANDOM
 import com.hongyongfeng.neteasecloudmusic.adapter.ListAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentListBinding
@@ -33,29 +31,33 @@ import com.hongyongfeng.neteasecloudmusic.util.SetRecyclerView
 import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
+import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.util.*
 import kotlin.concurrent.thread
 
-class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
+class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
     FragmentListBinding::inflate,
-    null,
+    SearchViewModel::class.java,
     true
 ){
-    private lateinit var viewModel: PublicViewModel
+    private lateinit var mPublicViewModel: PublicViewModel
     private var page=1
     private lateinit var recyclerView:RecyclerView
     private lateinit var binding: FragmentListBinding
     private lateinit var mActivity: FragmentActivity
+    private lateinit var mSearchViewModel: SearchViewModel
     private var listSongs= mutableListOf<Detail>()
     private var adapter= ListAdapter(listSongs)
     private lateinit var songDao:SongDao
     private lateinit var randomDao:RandomDao
+    private lateinit var prefs: SharedPreferences
+    var isScroll=false
+    private lateinit var mView:View
     override fun initFragment(
         binding: FragmentListBinding,
-        viewModel: ViewModel?,
+        viewModel: SearchViewModel?,
         publicViewModel: PublicViewModel?,
         savedInstanceState: Bundle?
     ) {
@@ -65,7 +67,10 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
         songDao=AppDatabase.getDatabase(mActivity).songDao()
         randomDao=AppDatabase.getDatabase(mActivity).randomDao()
         if (publicViewModel!=null){
-            this.viewModel=publicViewModel
+            this.mPublicViewModel=publicViewModel
+        }
+        if (viewModel!=null){
+            this.mSearchViewModel=viewModel
         }
         recyclerView=binding.rvPlaylist
         initView(binding, StatusBarUtils.getStatusBarHeight(activity as AppCompatActivity)+10)
@@ -77,7 +82,6 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
         binding.tvListName.text=arguments?.getString("listName")
         binding.tvName.text=arguments?.getString("listName")
         binding.tvCreator.text=arguments?.getString("creator")
-
         Picasso.get().load(arguments?.getString("url")).fit().into(binding.imgAlbum)
     }
 
@@ -88,10 +92,10 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
         }
     }
     private fun listRequest(id:Long,page:Int){
-        viewModel.apply {
+        mPublicViewModel.apply {
             getAPI(PlayListDetailedInterface::class.java).getPlayListDetailed(id,30,(page)*30).getResponse {
                     flow ->
-                flow.collect(){
+                flow.collect{
                     when(it){
                         is APIResponse.Error-> {
                             Log.e("TAG",it.errMsg)
@@ -123,20 +127,16 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             }
         }
     }
-    var isScroll=false
-    private lateinit var mView:View
+    @Suppress("DEPRECATION")
     override fun initListener() {
         binding.tvBack.setOnClickListener {
             mActivity.onBackPressed()
         }
-
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 if (recyclerView.computeVerticalScrollExtent() != recyclerView.computeVerticalScrollRange()) {
                     if (recyclerView.computeVerticalScrollExtent() + recyclerView.computeVerticalScrollOffset() >= recyclerView.computeVerticalScrollRange()) {
-
                         mView = recyclerView.getChildAt(recyclerView.childCount - 1)
                         if (!isScroll){
                             val bar = mView.findViewById<ProgressBar>(R.id.progress_bar)
@@ -151,7 +151,6 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
                             val tv = mView.findViewById<TextView>(R.id.tv_load)
                             tv.text = "没有更多内容了"
                         }
-
                     }
                 } else {
                     mView = recyclerView.getChildAt(recyclerView.childCount - 1)
@@ -163,7 +162,7 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             }
         })
         adapter.setOnItemClickListener({
-                view,position->
+                _, position->
             val songs=listSongs[position]
             val intent=Intent(mActivity, PlayerActivity::class.java)
             val bundle=Bundle()
@@ -172,24 +171,23 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
             val artistList=songs.ar
             val artists=getArtists(artistList)
             thread {
-                songDao.deleteAllSong()
-                //randomDao.deleteAllRandom()
-                songDao.clearAutoIncrease()
-                //randomDao.clearAutoIncrease()
+//                songDao.deleteAllSong()
+//                songDao.clearAutoIncrease()
+                mSearchViewModel.clearTableSong()
                 for (songs1 in listSongs){
                     val song =Song(songs1.name,songs1.id*1L,songs1.al.id*1L,getArtists(songs1.ar), albumUrl = songs1.al.picUrl)
-                    song.id=songDao.insertSong(song)
+                    song.id=mSearchViewModel.insertSong(song)
                     if(song.id-1==position*1L){
                         song.isPlaying=true
                         //以下使得lastPlaying为true的代码要在service中切歌的时候再写一遍
                         song.lastPlaying=true
-                        songDao.updateSong(song)
+                        mSearchViewModel.updateSong(song)
                     }
                 }
-                if (prefs.getInt("mode",-1)==2){
-                    val max=songDao.selectMaxId().toInt()
+                if (mSearchViewModel.getPlayMode()==2){
+                    val max=mSearchViewModel.selectMaxId().toInt()
                     RandomNode.randomList(max,mActivity)
-                    bundle.putInt("position",(randomDao.loadRandomBySongId(position+1).id-1).toInt())
+                    bundle.putInt("position",(mSearchViewModel.loadRandomBySongId(position+1)!!.id-1).toInt())
                 }else{
                     bundle.putInt("position",position)
                 }
@@ -200,21 +198,20 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
                 startActivity(intent)
             }
         }){
-                view,position->
+                _, position->
             listSongs[position].apply {
                 val artists=getArtists(ar)
                 val song=Song(name, id  , al.id,artists, albumUrl = al.picUrl)
-                songDao.loadLastPlayingSong().apply {
+                mSearchViewModel.loadLastPlayingSong().apply {
                     song.id= ((this?.id)?.plus(1)) ?: 1
                     if (this?.id!=null){
-                        //songDao.plusSongById(this.id.toInt()+1)
-                        val max=songDao.selectMaxId()
+                        val max=mSearchViewModel.selectMaxId()
                         for (mId in max downTo this.id+1){
-                            songDao.plusSongById(mId)
+                            mSearchViewModel.plusSongById(mId)
                         }
                     }
                 }
-                songDao.insertSong(song)
+                mSearchViewModel.insertSong(song)
                 ("已添加到下一首播放").showToast(mActivity)
             }
         }
@@ -235,8 +232,4 @@ class ListFragment: BaseFragment<FragmentListBinding, ViewModel>(
         lp.topMargin= dp
         binding.layoutRecently.layoutParams = lp
     }
-
-    private lateinit var prefs: SharedPreferences
-
-
 }

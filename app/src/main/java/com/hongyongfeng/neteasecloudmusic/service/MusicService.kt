@@ -79,11 +79,6 @@ class MusicService : LifecycleService() {
     private var notification: Notification? = null
 
     /**
-     * 通知ID
-     */
-    private val NOTIFICATION_ID = 1
-
-    /**
      * 通知管理器
      */
     private var manager: NotificationManager? = null
@@ -103,10 +98,6 @@ class MusicService : LifecycleService() {
 
     private val myMediaPlayer by lazy {
         MyMediaPlayer(mediaPlayer)
-    }
-
-    fun getPlayer(): MyMediaPlayer {
-        return this.myMediaPlayer
     }
 
     internal inner class MediaPlayerBinder : Binder() {
@@ -178,7 +169,7 @@ class MusicService : LifecycleService() {
         initRemoteViews()
         activityObserver()
         //注册动态广播
-        registerMusicReceiver();
+        registerMusicReceiver()
         initNotification()
         prefs = getSharedPreferences("player", Context.MODE_PRIVATE)
         mList = when (prefs.getInt("mode", -1)) {
@@ -242,15 +233,16 @@ class MusicService : LifecycleService() {
             launch {
                 mediaPlayer.stop()
                 mediaPlayer.release()
+                songDao.updateIsPlaying(false, lastPlay = true)
             }
             launch {
                 closeNotification()
+                songDao.updateIsPlaying(false, lastPlay = true)
                 unregisterReceiver(musicReceiver)
             }
 
         }
         super.onDestroy()
-
         //将数据库表中的isPlaying字段设为false
         //开设一个字段lastSong
         //将最后一首播放的歌曲的lastSong设为true，用于底部播放器和通知栏播放器的显示
@@ -421,7 +413,7 @@ class MusicService : LifecycleService() {
                         //请求网络获取图片url
                         getAPI(PlayerInterface::class.java).getAlbum(song?.albumId.toString())
                             .getResponse { flow ->
-                                flow.collect() {
+                                flow.collect {
                                     when (it) {
                                         is APIResponse.Error -> {
                                             Log.e("TAGInternet", it.errMsg)
@@ -534,6 +526,7 @@ class MusicService : LifecycleService() {
     /**
      * GT库通知栏
      */
+    @Deprecated("Deprecated in MusicService")
     private fun showGtNotification() {
         //创建自定义通知栏
         val builder = GT.GT_Notification.createNotificationFoldView(
@@ -611,10 +604,10 @@ class MusicService : LifecycleService() {
             )
             manager?.notify(NOTIFICATION_ID, notification)
         }
-        mediaPlayer.setOnBufferingUpdateListener { mp, percent ->
+        mediaPlayer.setOnBufferingUpdateListener { _, percent ->
             activityLiveData?.postValue(percent.toString())
         }
-        mediaPlayer.setOnErrorListener { mp, what, extra ->
+        mediaPlayer.setOnErrorListener { _, _, _ ->
             true
         }
         //播放时 获取当前歌曲列表是否有歌曲
@@ -634,7 +627,7 @@ class MusicService : LifecycleService() {
             }
             getAPI(PlayerInterface::class.java).getAlbum(mList[position].albumId.toString())
                 .getResponse { flow ->
-                    flow.collect() {
+                    flow.collect {
                         when (it) {
                             is APIResponse.Error -> {
                                 Log.e("TAGInternet", it.errMsg)
@@ -665,7 +658,7 @@ class MusicService : LifecycleService() {
                     }
                 }
             getAPI(PlayerInterface::class.java).getSong(songId.toString()).getResponse { flow ->
-                flow.collect() {
+                flow.collect {
                     when (it) {
                         is APIResponse.Error -> {
                             Log.e("TAGInternet", it.errMsg)
@@ -698,6 +691,7 @@ class MusicService : LifecycleService() {
     /**
      * 上一首
      */
+    @Deprecated("Deprecated in MusicService")
     fun previousMusic() {
         if (playPosition == -1) {
             playPosition = ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1)) ?: 0
@@ -728,6 +722,7 @@ class MusicService : LifecycleService() {
     /**
      * 下一首
      */
+    @Deprecated("Deprecated in MusicService")
     fun nextMusic() {
         if (playPosition == -1) {
             playPosition = ((songDao.loadLastPlayingSong()?.id?.toInt())?.minus(1)) ?: 0
@@ -760,6 +755,7 @@ class MusicService : LifecycleService() {
     /**
      * 暂停/继续 音乐
      */
+    @Deprecated("Deprecated in MusicService")
     fun pauseOrContinueMusic() {
         if (mediaPlayer.isPlaying) {
             mediaPlayer.pause()

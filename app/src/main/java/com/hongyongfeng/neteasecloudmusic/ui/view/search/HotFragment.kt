@@ -14,11 +14,9 @@ import androidx.fragment.app.FragmentActivity
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
 import com.hongyongfeng.neteasecloudmusic.databinding.FragmentHotBinding
-import com.hongyongfeng.neteasecloudmusic.model.dao.HotDao
 import com.hongyongfeng.neteasecloudmusic.network.APIResponse
 import com.hongyongfeng.neteasecloudmusic.network.api.HotInterface
 import com.hongyongfeng.neteasecloudmusic.model.entity.Hot
-import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.ui.widget.FlowLayout
 import com.hongyongfeng.neteasecloudmusic.util.DisplayUtils
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
@@ -31,7 +29,6 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     HotViewModel::class.java,
     true
 ){
-    private lateinit var hotDao:HotDao
     private lateinit var flowLayout: FlowLayout
     private lateinit var flowLayoutHistory: FlowLayout
     private lateinit var binding: FragmentHotBinding
@@ -67,25 +64,24 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
     }
 
     override fun initListener() {
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mActivity=requireActivity()
-        hotDao= AppDatabase.getDatabase(mActivity).hotDao()
+        //hotDao= AppDatabase.getDatabase(mActivity).hotDao()
         if (hotList.isEmpty()){
             hotWordsRequest()
         }else{
             display(flowLayout, hotList)
         }
-        display(flowLayoutHistory,hotDao.loadAllHots())
+        display(flowLayoutHistory,viewModel.loadAllHots())
     }
     private fun hotWordsRequest(){
-        publicViewModel!!.apply {
+        publicViewModel.apply {
             getAPI(HotInterface::class.java).getHotData().getResponse {
                     flow ->
-                flow.collect(){
+                flow.collect{
                     when(it){
                         is APIResponse.Error-> {
                             Log.e("TAGInternet",it.errMsg)
@@ -97,26 +93,16 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val list=it.response
                             hotList.addAll(list.data)
-//                            for (bean in list.hot){
-//                                println(bean.searchWord)
-//                            }
                             display(flowLayout,list.data)
-
-//                            println(list.data)
-//                            println(list.code)
-                            //切换主线程
-                            //更新UI
-                            //Toast.makeText(requireContext(), "登录成功", Toast.LENGTH_SHORT).show()
-                            //findNavController().navigate(R.id.action_loginFragment_to_mainNavFragment)
                         }
                     }
                 }
             }
         }
     }
+    @Suppress("DEPRECATION")
     private fun display(flowLayout: FlowLayout, hotList: List<Hot>) {
         for (hot in hotList) {
-            //for (i in 0..10) {
             //新建一个TextView控件
             val tv = TextView(mActivity)
             //将网络请求中返回的字段设置在TextView中
@@ -157,12 +143,12 @@ class HotFragment : BaseFragment<FragmentHotBinding, HotViewModel>(
             stateListDrawable.addState(intArrayOf(), drawableDefault)
             tv.background = stateListDrawable
             //设置点击事件
-            tv.setOnClickListener { v: View? ->
+            tv.setOnClickListener {
                 val key = tv.text.toString()
                 viewModel.setText(key)
-                hotDao.deleteHot(key)
-                hotDao.insertHot(Hot(key))
-
+//                hotDao.deleteHot(key)
+//                hotDao.insertHot(Hot(key))
+                viewModel.insert(key)
             }
             flowLayout.addView(tv)
         }

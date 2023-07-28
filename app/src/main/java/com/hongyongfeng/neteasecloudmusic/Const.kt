@@ -36,3 +36,7 @@ const val RANDOM = "random"
 const val ORDER = "order"
 
 const val TAG = "MusicReceiver"
+/**
+ * 通知ID
+ */
+const val NOTIFICATION_ID = 1

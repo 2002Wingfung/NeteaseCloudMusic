@@ -138,8 +138,7 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
      * 通知栏动作观察者
      */
     private fun notificationObserver() {
-        songDao=AppDatabase.getDatabase(this).songDao()
-        randomDao=AppDatabase.getDatabase(this).randomDao()
+
         activityLiveData = LiveDataBus.instance.with("activity_control", String::class.java)
         activityLiveData!!.observe(this@MainActivity, true
         ) { value ->
@@ -203,6 +202,9 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         nav.layoutParams = nav.layoutParams
         headerLayout =nav.inflateHeaderView(R.layout.nav_header)
         prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
+        songDao=AppDatabase.getDatabase(this).songDao()
+        randomDao=AppDatabase.getDatabase(this).randomDao()
+        songDao.updateIsPlaying(false, lastPlay = true)
         initView()
         initListener()
         initAnimation()
@@ -292,7 +294,8 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         Log.e("MainActivity","onDestroy")
         unbindService(mServiceConnection)
     }
-    fun onClick() {
+    @SuppressWarnings("unused")
+    fun onClick(view :View) {
         //"播放".showToast(this)
         val id=if (prefs.getInt("mode",0)!=2){
             songDao.loadId()

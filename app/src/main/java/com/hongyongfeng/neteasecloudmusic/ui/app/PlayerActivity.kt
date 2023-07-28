@@ -133,7 +133,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     }
     private fun initAnimation(){
         // Object target:目标对象，
-        // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
+        // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的setPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
         // float... values:一系列这个属性将会到达的值
         mAnimator= ObjectAnimator.ofFloat(binding.imgAlbum, "rotation", 0f, 720f)
         val needle=binding.imgNeedle
@@ -146,7 +146,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         mAnimatorNeedleStart.duration = 700
         mAnimatorNeedleStart.interpolator = LinearInterpolator()
         // Object target:目标对象，
-        // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
+        // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的setPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
         // float... values:一系列这个属性将会到达的值
         // 设置一次动画的时间
         mAnimator.duration = 19000
@@ -185,7 +185,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         val singer=bundle?.getString("singer")
 
         if (songId!=null){
-            //储存id到sp，然后每次进行oncreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaplayer，
+            //储存id到sp，然后每次进行onCreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaPlayer，
             //如果不一样则重置
             val prefs=getSharedPreferences("player",Context.MODE_PRIVATE)
             val songIdOrigin=prefs.getInt("songId",-1)
@@ -205,14 +205,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 }else{
                     mediaPlayer.reset()
                 }
-                //if (::mediaPlayer.isInitialized){
-
-                //}else{
-                //Log.e("MyPlayerActivity","not init")
-                //现在播放不同的歌曲会导致上一首歌曲不能停止
-                //}
                 songsRequest(songId)
-
                 prefs.edit{
                     putInt("songId",songId)
                 }
@@ -257,7 +250,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         initListener()
         mAnimator.start()
         //当音频文件加载好之后就start
-    // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
+        // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
         notificationObserver()
         register()
         prefs.getInt("mode",-1).apply {
@@ -278,14 +271,12 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private fun register(){
         val filterPercent = IntentFilter()
         filterPercent.addAction(ACTION_SERVICE_PERCENT)
-
         registerReceiver(PercentReceiver(), filterPercent)
         val filterComplete = IntentFilter()
         filterComplete.addAction(ACTION_SERVICE_COMPLETE)
         registerReceiver(CompleteReceiver(), filterComplete)
         val filter = IntentFilter()
         filter.addAction(ACTION_SERVICE_NEED)
-
         registerReceiver(ServiceBroadcastReceiver(), filter)
     }
     private fun initView(binding: ActivityPlayerBinding, dp:Int){
@@ -375,7 +366,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         publicViewModel!!.apply {
             getAPI(PlayerInterface::class.java).getSong(songId.toString()).getResponse {
                     flow ->
-                flow.collect(){
+                flow.collect{
                     when(it){
                         is APIResponse.Error-> {
                             Log.e("TAGInternet",it.errMsg)

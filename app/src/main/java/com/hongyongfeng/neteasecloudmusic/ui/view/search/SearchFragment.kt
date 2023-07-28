@@ -29,7 +29,6 @@ class SearchFragment: BaseFragment<FragmentSearchBinding, HotViewModel>(
     HotViewModel::class.java,
     true
 ){
-
     private lateinit var mActivity: FragmentActivity
     private lateinit var binding:FragmentSearchBinding
     private lateinit var edtSearch:EditText

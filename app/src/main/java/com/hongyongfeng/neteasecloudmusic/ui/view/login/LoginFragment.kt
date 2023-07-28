@@ -22,15 +22,12 @@ class LoginFragment :BaseFragment<FragmentLoginBinding,ViewModel>(
         savedInstanceState: Bundle?
     ) {
         mActivity=requireActivity()
-
         val prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
         prefs.edit {
             putLong("userId",1738181262)
             //到时候改成登录后返回的userId
         }
     }
-
     override fun initListener() {
-        //TODO("Not yet implemented")
     }
 }

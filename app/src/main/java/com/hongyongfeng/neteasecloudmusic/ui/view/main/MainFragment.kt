@@ -4,9 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -43,23 +41,15 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
     private var listEstablish= mutableListOf<PlayList>()
     private var adapterCollect=PlayListAdapter(listCollect)
     private var adapterEstablish=PlayListAdapter(listEstablish)
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return super.onCreateView(inflater, container, savedInstanceState)
-    }
 
     override fun initListener() {
-        //TODO("Not yet implemented")
     }
     @SuppressLint("NotifyDataSetChanged")
     fun initPlayList(){
-        publicViewModel!!.apply {
+        publicViewModel.apply {
             getAPI(PlayListInterface::class.java).getPlayList("1738181262","50","0").getResponse {
                     flow ->
-                flow.collect(){
+                flow.collect{
                     when(it){
                         is APIResponse.Error-> {
                             Log.e("TAG",it.errMsg)
@@ -71,7 +61,6 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
                         is APIResponse.Success-> withContext(Dispatchers.Main){
                             val playList=it.response.playlist
                             val prefs=mActivity.getSharedPreferences("player", Context.MODE_PRIVATE)
-
                             val userId=prefs.getLong("userId",1738181262)
                             playList.forEach{
                                     list->
@@ -83,7 +72,6 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
                                     adapterEstablish.notifyItemChanged(0)
                                 }
                             }
-
                         }
                     }
                 }
@@ -129,22 +117,18 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
         recyclerViewEstablish = binding.rvEstablish
     }
     private fun initListener(binding:FragmentMainBinding) {
-
         adapterCollect.setOnItemClickListener {
-            view:View,position:Int->
+                _:View, position:Int->
             val bundle=Bundle()
             val collect=listCollect[position]
             bundle.putLong("id",collect.id)
-            //Log.e("collect",collect.id.toString())
             bundle.putString("listName",collect.name)
             bundle.putString("url",collect.coverImgUrl)
             bundle.putString("creator",collect.creator.nickname)
             findNavController().navigate(R.id.action_mainFragment_to_listFragment,bundle)
-
         }
         adapterEstablish.setOnItemClickListener {
-            view:View,position:Int->
-
+                _:View, position:Int->
             val bundle=Bundle()
             val establish=listEstablish[position]
             bundle.putLong("id",establish.id)
@@ -152,27 +136,21 @@ class MainFragment :BaseFragment<FragmentMainBinding,ViewModel>(
             bundle.putString("url",establish.coverImgUrl)
             bundle.putString("creator",establish.creator.nickname)
             findNavController().navigate(R.id.action_mainFragment_to_listFragment,bundle)
-
-            //println((view.findViewById(R.id.tv_title) as TextView).text)
         }
         binding.btnNva.setOnClickListener{
             mActivity.findViewById<DrawerLayout>(R.id.drawer_layout).openDrawer(GravityCompat.START)
-            //println("success")
         }
         binding.layoutLikes.setOnClickListener {
             //findNavController().navigate(R.id.action_mainFragment_to_listFragment)
-
         }
         binding.layoutRecently.setOnClickListener {
             findNavController().navigate(R.id.action_mainFragment_to_recentlyFragment)
-
         }
         binding.btnQrcode.setOnClickListener{
             findNavController().navigate(R.id.action_mainFragment_to_QrFragment)
         }
         binding.searchBar.setOnClickListener{
             findNavController().navigate(R.id.action_mainFragment_to_searchFragment)
-
         }
     }
 }

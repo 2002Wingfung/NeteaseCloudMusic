@@ -50,7 +50,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
      */
     private var activityLiveData: BusMutableLiveData<String>? = null
     private var albumId: Int=0
-
+    private var change=false
+    private lateinit var bottomSheetDialog:BottomSheetDialog
     private lateinit var mAnimator: ObjectAnimator
     private lateinit var mAnimatorNeedlePause: ObjectAnimator
     private lateinit var mAnimatorNeedleStart: ObjectAnimator
@@ -108,7 +109,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private fun time(time:Int):String{
         val min=(time/1000f/60).toInt()
         val s=(time-min*60*1000)/1000f.roundToInt()
-
         return if (s==10){
             "0$min:$s"
         }else if(min<10&&s<10){
@@ -120,7 +120,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         }else{
             "$min:$s"
         }
-
     }
     private var handler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -150,9 +149,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         // String propertyName:指定要改变对象的什么属性，这个属性名要求在对应对象中必须有对应的public的PsetPropertyName的方法。如上面的rotation就要求ImageView中必须有setRotation方法才行。
         // float... values:一系列这个属性将会到达的值
         // 设置一次动画的时间
-        // 设置一次动画的时间
         mAnimator.duration = 19000
-        // 设置插值器，用来控制变化率
         // 设置插值器，用来控制变化率
         mAnimator.interpolator = LinearInterpolator()
         // 设置重复的次数，无限
@@ -320,6 +317,13 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                             mAnimator.resume()
                         } else {
                             mAnimator.start()
+                        }
+                        if (change){
+                            val song = songDao.loadLastPlayingSong()
+                            binding.tvTitle.text = song?.name
+                            binding.tvSinger.text=song?.artist
+                            Picasso.get().load(song?.albumUrl).fit().into(binding.imgAlbum)
+                            change=false
                         }
                     }
                 }
@@ -567,39 +571,27 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         })
         adapter.setOnItemClickListener({
-                view,position->
-
-//            val intent= Intent(mActivity, PlayerActivity::class.java)
-//            val bundle=Bundle()
-//            val song=listSongs[position]
-//            bundle.putString("name",song.name)
-//            bundle.putInt("id",song.songId.toInt())
-//            thread {
-//                songDao.updateIsPlaying(false, lastPlay = true)
-//                songDao.updateLastPlaying(false, origin = true)
-//                songDao.updateLastPlayingById(true,song.id)
-//                songDao.updateIsPlaying(true, lastPlay = true)
-//                song.isPlaying=true
-//                //以下使得lastPlaying为true的代码要在service中切歌的时候再写一遍
-//                song.lastPlaying=true
-//                songDao.updateSong(song)
-//            }
-//            bundle.putInt("albumId",song.albumId.toInt())
-//            bundle.putInt("position",position)
-//            bundle.putString("singer",song.artist)
-//            intent.putExtras(bundle)
-//            startActivity(intent)
+                _, position->
+            //切歌，不退出PlayerActivity，但是能实现换歌功能
+            myService.play(position,0)
+            bottomSheetDialog.dismiss()
+            change=true
+            if (mAnimator.isPaused){
+                mAnimatorNeedleStart.start()
+                mAnimator.start()
+                binding.icPlay.setBackgroundResource(R.drawable.ic_pause)
+                count++
+            }
         },{
-                view,position->
+                _, position->
             //("删除$position").showToast(mActivity)
             songDao.deleteSongById(position+1)
             songDao.updateSongById(position+2)
             listSongs.removeAt(position)
             adapter.notifyItemRemoved(position)
         },{
-                view,position->
+                _, _ ->
             ("已添加到下一首播放").showToast(this)
-
         })
     }
     private fun refresh(seekBar: SeekBar, mediaPlayer:MediaPlayer){
@@ -614,7 +606,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         },0,500)
     }
     private fun showBottomSheetDialog(){
-        val bottomSheetDialog = BottomSheetDialog(this)
+        bottomSheetDialog = BottomSheetDialog(this)
         bottomSheetDialog.setContentView(R.layout.layout_bottom_sheet)
         val clear: TextView? = bottomSheetDialog.findViewById(R.id.tv_back)
         val recyclerView: RecyclerView? = bottomSheetDialog.findViewById(R.id.rv_play_list)
@@ -632,10 +624,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         if (::timer.isInitialized){
             timer.cancel()
         }
-
         Log.e("MyPlayerActivity","onDestroy")
         val intent = Intent(this@PlayerActivity, MusicService::class.java)
-
         stopService(intent)
         unbindService(mServiceConnection)
         super.onDestroy()

@@ -64,6 +64,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     private var adapter= SongAdapter(listSongs)
     private lateinit var songDao:SongDao
     private lateinit var randomDao: RandomDao
+    private var count1=0
 
     /**
      * 当在Activity中做出播放模式的改变时，通知做出相应改变
@@ -89,7 +90,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             timer.cancel()
             "播放已完成".showToast(this@PlayerActivity)
         }
-
     }
     internal inner class PercentReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -159,14 +159,12 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //imageLoader= ImageLoader.build(this)
         initAnimation()
         prefs=getSharedPreferences("player", Context.MODE_PRIVATE)
         songDao= AppDatabase.getDatabase(this@PlayerActivity).songDao()
         randomDao= AppDatabase.getDatabase(this@PlayerActivity).randomDao()
         val bundle = intent.extras
         status=bundle?.getInt("status")
-
         position=bundle?.getInt("position")
         val name=bundle?.getString("name")
         binding.tvTitle.text=name
@@ -180,10 +178,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             intent1, mServiceConnection,
             BIND_AUTO_CREATE
         )
-
         val songId=bundle?.getInt("id")
         val singer=bundle?.getString("singer")
-
         if (songId!=null){
             //储存id到sp，然后每次进行onCreate方法的时候就读取这个id，如果这个id和sp中的一样，则不重置mediaPlayer，
             //如果不一样则重置
@@ -252,7 +248,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
         //当音频文件加载好之后就start
         // 在合适的位置调用 mAnimator.pause()方法进行暂停操作
         notificationObserver()
-        register()
+        //register()
         prefs.getInt("mode",-1).apply {
             if (this!=-1){
                 count1+=this
@@ -268,6 +264,7 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
     }
+    @Deprecated("Deprecated in PlayerActivity")
     private fun register(){
         val filterPercent = IntentFilter()
         filterPercent.addAction(ACTION_SERVICE_PERCENT)
@@ -438,8 +435,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
     }
-    private var count1=0
-
     @SuppressLint("UseCompatLoadingForDrawables")
     private fun initListener() {
         binding.btnBack.setOnClickListener {
@@ -502,7 +497,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             //myService.previousMusic()
             myService.previous()
             //切歌的时候判断动画是否在转，如果在暂停状态，则开启
-            //Picasso.get().load(url).fit().into(binding.imgAlbum)
             if (mAnimator.isPaused){
                 mAnimator.start()
                 mAnimatorNeedleStart.start()
@@ -542,7 +536,6 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 count1++
             }
         }
-
         binding.icList.setOnClickListener {
             listSongs.addAll(songDao.loadAllSongs())
             showBottomSheetDialog()

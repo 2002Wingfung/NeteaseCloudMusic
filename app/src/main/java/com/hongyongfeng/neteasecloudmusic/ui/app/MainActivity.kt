@@ -292,12 +292,9 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         super.onDestroy()
         val intent = Intent(this, MusicService::class.java)
         stopService(intent)
-
         songDao.updateIsPlayingBySelf(false)
         Log.e("MainActivity","onDestroy")
         unbindService(mServiceConnection)
-        //musicService?.onDestroy()
-        //exitProcess(0)
     }
     private lateinit var prefs: SharedPreferences
 
@@ -312,14 +309,16 @@ class MainActivity : BaseActivity<ActivityMainBinding,ViewModel>(ActivityMainBin
         }
         if (counts%2!=0){
             imgButton.setIconResource(R.drawable.ic_play_circle_2)
-            musicService!!.pauseOrContinueMusic()
+            //musicService!!.pauseOrContinueMusic()
+            musicService!!.pauseOrContinue()
             logoAnimation.pause()
             songDao.updateIsPlayingBySelf(false)
         }else{
             imgButton.setIconResource(R.drawable.ic_pause)
 
             if (counts!=0){
-                musicService!!.pauseOrContinueMusic()
+                //musicService!!.pauseOrContinueMusic()
+                musicService!!.pauseOrContinue()
             }else{
                 if (id != null) {
                     musicService!!.play(id-1,0)

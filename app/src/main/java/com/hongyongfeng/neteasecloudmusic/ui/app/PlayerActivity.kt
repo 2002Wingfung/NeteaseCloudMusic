@@ -459,7 +459,9 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                 //"暂停".showToast(this)
                 it.background=  getDrawable(R.drawable.ic_play_circle_2)
                 if (mediaPlayer.isPlaying){
-                    myService.pauseOrContinueMusic()
+                    //myService.pauseOrContinueMusic()
+                    myService.pauseOrContinue()
+
                     thread {
                         //将isPlaying设为false
                         songDao.updateIsPlaying(false, lastPlay = true)
@@ -482,7 +484,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
                         songDao.updateIsPlaying(true, lastPlay = true)
                     }else{
                         //开始播放
-                        myService.pauseOrContinueMusic()
+                        //myService.pauseOrContinueMusic()
+                        myService.pauseOrContinue()
                         thread {
                             songDao.updateIsPlaying(true, lastPlay = true)
                         }
@@ -492,7 +495,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             count++
         }
         binding.icNext.setOnClickListener {
-            myService.nextMusic()
+            //myService.nextMusic()
+            myService.next()
             if (mAnimator.isPaused){
                 mAnimatorNeedleStart.start()
                 mAnimator.start()
@@ -501,7 +505,8 @@ class PlayerActivity :BaseActivity<ActivityPlayerBinding,ViewModel>(
             }
         }
         binding.icBack.setOnClickListener {
-            myService.previousMusic()
+            //myService.previousMusic()
+            myService.previous()
             //切歌的时候判断动画是否在转，如果在暂停状态，则开启
             //Picasso.get().load(url).fit().into(binding.imgAlbum)
             if (mAnimator.isPaused){

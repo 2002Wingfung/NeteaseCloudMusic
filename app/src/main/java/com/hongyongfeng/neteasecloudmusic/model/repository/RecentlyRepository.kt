@@ -2,10 +2,16 @@ package com.hongyongfeng.neteasecloudmusic.model.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import com.hongyongfeng.neteasecloudmusic.model.database.AppDatabase
 import com.hongyongfeng.neteasecloudmusic.model.entity.Random
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.util.MyApplication
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlin.concurrent.thread
 
 class RecentlyRepository {
@@ -14,10 +20,31 @@ class RecentlyRepository {
     private val randomDao=AppDatabase.getDatabase(context).randomDao()
     private val prefs: SharedPreferences =context.getSharedPreferences("player", Context.MODE_PRIVATE)
 
+    fun getLiveData():LiveData<List<Song>>{
+        return songDao.loadFlowAllSongs().asLiveData()
+    }
+    fun getFlow(): Flow<List<Song>> =songDao.loadFlowAllSongs()
     fun getSongList(listener:(list:List<Song>)->Unit){
-        thread {
-            listener(songDao.loadAllSongs())
+        val job = Job()
+
+        val scope = CoroutineScope(job)
+
+        scope.launch {
+            // 处理具体的逻辑
+            withContext(Dispatchers.IO){
+                //listener(songDao.loadAllSongs())
+                //println("success")
+                songDao.loadFlowAllSongs().onEach {
+                    //println(it)
+                    listener(it)
+                    job.cancel()
+                }.launchIn(this)
+            }
         }
+
+        //thread {
+//            listener(songDao.loadAllSongs())
+        //}
     }
     fun updateSong(song:Song){
         songDao.updateSong(song)

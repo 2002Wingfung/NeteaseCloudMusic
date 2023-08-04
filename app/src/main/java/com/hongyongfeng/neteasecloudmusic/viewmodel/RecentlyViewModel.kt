@@ -1,14 +1,29 @@
 package com.hongyongfeng.neteasecloudmusic.viewmodel
 
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.switchMap
+//import androidx.lifecycle.Transformations
 import com.hongyongfeng.neteasecloudmusic.base.BaseViewModel
 import com.hongyongfeng.neteasecloudmusic.model.entity.Random
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
 import com.hongyongfeng.neteasecloudmusic.model.repository.RecentlyRepository
+import kotlinx.coroutines.flow.Flow
 
 class RecentlyViewModel: BaseViewModel() {
     fun getSongList(listener:(list:List<Song>)->Unit){
-        repository?.getSongList(listener)
+        val viewModelListener:(list:List<Song>)->Unit={
+            listener(it)
+        }
+        repository?.getSongList(viewModelListener)
     }
+    private val songLiveData= MutableLiveData<Any?>()
+    val result=songLiveData.switchMap{
+        repository!!.getLiveData()
+    }
+    fun getLiveData(){
+        songLiveData.value=songLiveData.value
+    }
+    fun getFlow(): Flow<List<Song>> =repository!!.getFlow()
     /**
      * AUTHOR:hong
      * INTRODUCE:获取需要的Repository

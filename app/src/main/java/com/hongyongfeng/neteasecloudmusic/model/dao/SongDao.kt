@@ -2,6 +2,7 @@ package com.hongyongfeng.neteasecloudmusic.model.dao
 
 import androidx.room.*
 import com.hongyongfeng.neteasecloudmusic.model.entity.Song
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SongDao {
@@ -11,6 +12,8 @@ interface SongDao {
     fun updateSong(newSong:Song)//注意更新和删除数据时都是基于User的id值去操作的
     @Query("select * from Song ")
     fun loadAllSongs():List<Song>
+    @Query("select * from Song ")
+    fun loadFlowAllSongs(): Flow<List<Song>>
     @Query("select id from Song where lastPlaying=1")
     fun loadId():Int
     @Query("select * from Song where isPlaying==1")

@@ -44,11 +44,34 @@ class RecentlyFragment: BaseFragment<FragmentRecentlyBinding, RecentlyViewModel>
         this.viewModel=viewModel!!
         mActivity=requireActivity()
         songDao=AppDatabase.getDatabase(mActivity).songDao()
-        viewModel.getSongList {
-            if (listSongs.isEmpty()){
+        //        viewModel.getSongList {
+//            //println(it)
+//            if (listSongs.isEmpty()){
+//                listSongs.addAll(it)
+//            }
+//            mActivity.runOnUiThread {
+//                adapter.notifyDataSetChanged()
+//            }
+//        }
+        viewModel.getLiveData()
+        viewModel.result.observe(this) {
+            if (listSongs.isEmpty()) {
                 listSongs.addAll(it)
             }
+            mActivity.runOnUiThread {
+                adapter.notifyDataSetChanged()
+            }
         }
+//        lifecycle.coroutineScope.launch {
+//            viewModel.getFlow().collect {
+//                if (listSongs.isEmpty()){
+//                    listSongs.addAll(it)
+//                }
+//                mActivity.runOnUiThread {
+//                    adapter.notifyDataSetChanged()
+//                }
+//            }
+//        }
         SetRecyclerView.setRecyclerView(
             mActivity,
             recyclerView,

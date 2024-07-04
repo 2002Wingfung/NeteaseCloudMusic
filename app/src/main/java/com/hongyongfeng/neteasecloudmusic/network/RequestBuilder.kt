@@ -13,7 +13,7 @@ class RequestBuilder {
     private var retrofitBuilder:Retrofit
     init {
         OkHttpClient.Builder()
-            .connectTimeout(5,TimeUnit.SECONDS)
+            .connectTimeout(10,TimeUnit.SECONDS)
             .build().apply {
                 retrofitBuilder=Retrofit.Builder()
                     .baseUrl(REQUEST_URL)

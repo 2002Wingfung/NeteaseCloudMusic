@@ -3,16 +3,26 @@ package com.hongyongfeng.neteasecloudmusic.ui.view.list
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
+import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.hongyongfeng.neteasecloudmusic.R
 import com.hongyongfeng.neteasecloudmusic.adapter.ListAdapter
 import com.hongyongfeng.neteasecloudmusic.base.BaseFragment
@@ -32,7 +42,6 @@ import com.hongyongfeng.neteasecloudmusic.util.StatusBarUtils
 import com.hongyongfeng.neteasecloudmusic.util.showToast
 import com.hongyongfeng.neteasecloudmusic.viewmodel.PublicViewModel
 import com.hongyongfeng.neteasecloudmusic.viewmodel.SearchViewModel
-import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
@@ -55,6 +64,11 @@ class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
     private lateinit var prefs: SharedPreferences
     var isScroll=false
     private lateinit var mView:View
+    private var matrix: Matrix? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
     override fun initFragment(
         binding: FragmentListBinding,
         viewModel: SearchViewModel?,
@@ -79,12 +93,54 @@ class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
             recyclerView,
             adapter
         )
-        binding.tvListName.text=arguments?.getString("listName")
-        binding.tvName.text=arguments?.getString("listName")
-        binding.tvCreator.text=arguments?.getString("creator")
-        Picasso.get().load(arguments?.getString("url")).fit().into(binding.imgAlbum)
-    }
+        with(binding){
+            toolbarPlaylistFragment.title=arguments?.getString("listName")
+            tvName.text=arguments?.getString("listName")
+            tvCreator.text=arguments?.getString("creator")
+            //使用Glide异步获取bitmap，提供bitmap加载图片的同时，让palette进行颜色获取
 
+            Glide.with(activity as AppCompatActivity).asBitmap().load(arguments?.getString("url")).into(object : CustomTarget<Bitmap>(){
+                override fun onResourceReady(bitmap: Bitmap, transition: Transition<in Bitmap>?) {
+                    //防止该 Fragment 已经销毁后Glide异步加载，导致崩溃
+                    //if (!viewDestroy) {
+                        val compressBitmap = getCompressBitmap(0.5f, 0.5f, bitmap)
+                        imgAlbum.setImageBitmap(compressBitmap)
+                        Palette.from(compressBitmap).generate { palette ->
+                            val darkMutedColor = palette?.getDarkMutedColor(Color.GRAY) ?: Color.GRAY
+                            val mutedColor = palette?.getMutedColor(Color.GRAY) ?: Color.GRAY
+                            //背景设置渐变
+                            val gradientDrawable = GradientDrawable(
+                                GradientDrawable.Orientation.TOP_BOTTOM,
+                                arrayOf(darkMutedColor, mutedColor).toIntArray()
+                            )
+                            appBarLayoutPlaylistFragment.background = gradientDrawable
+                            collapsingToolbarLayoutPlaylistFragment.setContentScrimColor((mutedColor + darkMutedColor) / 2)
+                        }
+                    //}
+                }
+                override fun onLoadCleared(placeholder: Drawable?) {
+                    //if (!viewDestroy) Glide.with(requireContext()).clear(this)
+                }
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                }
+            })
+        }
+
+//        Picasso.get().load(arguments?.getString("url")).fit().into(binding.imgAlbum)
+
+
+    }
+    /**
+     * 通过Matrix对Bitmap进行压缩
+     * @param sx 对水平方向的压缩量
+     * @param sy 对垂直方向的压缩量
+     * @return 返回压缩完成的Bitmap
+     */
+    fun getCompressBitmap(sx: Float, sy: Float, bitmap: Bitmap): Bitmap{
+        if (matrix == null) matrix = Matrix()
+        matrix!!.setScale(sx, sy)
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
     override fun onStart() {
         super.onStart()
         if (listSongs.isEmpty()){
@@ -129,9 +185,9 @@ class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
     }
     @Suppress("DEPRECATION")
     override fun initListener() {
-        binding.tvBack.setOnClickListener {
-            mActivity.onBackPressed()
-        }
+//        binding.tvBack.setOnClickListener {
+//            mActivity.onBackPressed()
+//        }
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -228,8 +284,39 @@ class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
         return artists.toString()
     }
     private fun initView(binding: FragmentListBinding, dp:Int){
-        val lp = binding.layoutRecently.layoutParams as LinearLayout.LayoutParams
+//        val lp = binding.collapsingToolbarLayoutPlaylistFragment.layoutParams as AppBarLayout.LayoutParams
+//        lp.topMargin= dp
+//        binding.collapsingToolbarLayoutPlaylistFragment.layoutParams = lp
+        val lp = binding.toolbarPlaylistFragment.layoutParams as CollapsingToolbarLayout.LayoutParams
         lp.topMargin= dp
-        binding.layoutRecently.layoutParams = lp
+        binding.toolbarPlaylistFragment.layoutParams = lp
+//        val lp = binding.appBarLayoutPlaylistFragment.layoutParams as CoordinatorLayout.LayoutParams
+//        lp.topMargin= dp
+//        binding.appBarLayoutPlaylistFragment.layoutParams = lp
+
+        val lpConstraintLayout = binding.constraintLayoutList.layoutParams as CollapsingToolbarLayout.LayoutParams
+        lpConstraintLayout.topMargin= dp+lp.height
+        binding.constraintLayoutList.layoutParams = lpConstraintLayout
+    }
+    private fun initToolbar(){
+        (activity as AppCompatActivity).apply {
+            setSupportActionBar(binding.toolbarPlaylistFragment)
+            supportActionBar?.apply {
+                title = "歌单"
+                setDisplayHomeAsUpEnabled(true)
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initToolbar()
+    }
+    @Deprecated("Deprecated in Java")
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home){
+            mActivity.onBackPressed()
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

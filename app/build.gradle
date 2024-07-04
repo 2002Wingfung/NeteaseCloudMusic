@@ -64,13 +64,14 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 dependencies {
     //GT基础功能(必要的)
-    implementation 'com.github.1079374315:GSLS_Tool:v1.4.4.5'
+    //implementation 'com.github.1079374315:GSLS_Tool:v1.4.4.5'
     //使用 gt-DataBinding 才需要添加以下注册,否则可以不添加
-    kapt 'com.github.1079374315:GSLS_Tool:v1.4.4.5'//注册 gt-DataBinding 功能
+    //kapt 'com.github.1079374315:GSLS_Tool:v1.4.4.5'//注册 gt-DataBinding 功能
     implementation 'com.guolindev.permissionx:permissionx:1.7.1'
     implementation project(':Player')
     implementation 'com.jakewharton:disklrucache:2.0.2'
     implementation "androidx.room:room-runtime:2.4.2"
+    implementation 'androidx.palette:palette-ktx:1.0.0'
     kapt "androidx.room:room-compiler:2.4.2"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.4.1"
@@ -91,6 +92,7 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.1.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.1.0'
     implementation 'com.squareup.picasso:picasso:2.8'
+    implementation('com.github.bumptech.glide:glide:4.16.0')
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"

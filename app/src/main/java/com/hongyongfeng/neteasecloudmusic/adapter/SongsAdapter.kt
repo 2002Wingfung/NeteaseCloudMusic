@@ -43,7 +43,7 @@ class SongsAdapter(private val list:List<Songs>) : RecyclerView.Adapter<Recycler
             val artists=java.lang.StringBuilder()
             val artistList=bean.getArtists()
             for (artist in artistList!!){
-                if (artist.equals(artistList.get(artistList.size-1))){
+                if (artist == artistList[artistList.size-1]){
                     artists.append(artist.name)
                 }else{
                     artists.append(artist.name).append("/")

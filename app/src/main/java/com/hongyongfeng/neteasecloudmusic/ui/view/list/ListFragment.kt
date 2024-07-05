@@ -17,6 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
+import androidx.navigation.fragment.findNavController
 import androidx.palette.graphics.Palette
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -299,13 +300,18 @@ class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
         binding.constraintLayoutList.layoutParams = lpConstraintLayout
     }
     private fun initToolbar(){
-        (activity as AppCompatActivity).apply {
+        //解决了Toolbar的内存泄漏
+        binding.toolbarPlaylistFragment.outlineProvider = null
+        binding.appBarLayoutPlaylistFragment.outlineProvider = null
+        (mActivity as AppCompatActivity).apply {
             setSupportActionBar(binding.toolbarPlaylistFragment)
             supportActionBar?.apply {
-                title = "歌单"
+//                title = "歌单"
                 setDisplayHomeAsUpEnabled(true)
             }
         }
+
+//        (mActivity as AppCompatActivity).setSupportActionBar(binding.toolbarPlaylistFragment)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -315,7 +321,7 @@ class ListFragment: BaseFragment<FragmentListBinding, SearchViewModel>(
     @Deprecated("Deprecated in Java")
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home){
-            mActivity.onBackPressed()
+            findNavController().navigateUp()
         }
         return super.onOptionsItemSelected(item)
     }
